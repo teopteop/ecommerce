@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.product.entity;
+package com.teopteop.ecommerce.domain.product.domain;
 
 import com.teopteop.ecommerce.global.common.entity.BaseEntity;
 import jakarta.persistence.*;

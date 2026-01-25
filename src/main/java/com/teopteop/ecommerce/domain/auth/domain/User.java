@@ -1,6 +1,6 @@
-package com.teopteop.ecommerce.domain.auth.entity;
+package com.teopteop.ecommerce.domain.auth.domain;
 
-import com.teopteop.ecommerce.domain.member.entity.Member;
+import com.teopteop.ecommerce.domain.member.domain.Member;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

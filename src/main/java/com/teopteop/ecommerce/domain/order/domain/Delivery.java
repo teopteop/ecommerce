@@ -1,6 +1,6 @@
-package com.teopteop.ecommerce.domain.order.entity;
+package com.teopteop.ecommerce.domain.order.domain;
 
-import com.teopteop.ecommerce.domain.member.entity.Address;
+import com.teopteop.ecommerce.domain.member.domain.Address;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;

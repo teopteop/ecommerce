@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.auth.entity;
+package com.teopteop.ecommerce.domain.auth.domain;
 
 public enum UserStatus {
     ACTIVE, DORMANT, LOCKED, WITHDRAWN

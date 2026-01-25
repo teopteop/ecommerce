@@ -1,12 +1,11 @@
 package com.teopteop.ecommerce.order;
 
-import com.teopteop.ecommerce.domain.member.entity.Address;
-import com.teopteop.ecommerce.domain.member.entity.Member;
-import com.teopteop.ecommerce.domain.order.entity.Order;
-import com.teopteop.ecommerce.domain.order.entity.OrderItem;
-import com.teopteop.ecommerce.domain.product.entity.Product;
+import com.teopteop.ecommerce.domain.member.domain.Address;
+import com.teopteop.ecommerce.domain.member.domain.Member;
+import com.teopteop.ecommerce.domain.order.domain.Order;
+import com.teopteop.ecommerce.domain.order.domain.OrderItem;
+import com.teopteop.ecommerce.domain.product.domain.Product;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

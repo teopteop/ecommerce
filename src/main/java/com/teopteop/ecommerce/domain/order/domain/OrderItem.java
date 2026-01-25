@@ -1,6 +1,6 @@
-package com.teopteop.ecommerce.domain.order.entity;
+package com.teopteop.ecommerce.domain.order.domain;
 
-import com.teopteop.ecommerce.domain.product.entity.Product;
+import com.teopteop.ecommerce.domain.product.domain.Product;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
