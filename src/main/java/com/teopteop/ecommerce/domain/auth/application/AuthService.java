@@ -8,15 +8,12 @@ import com.teopteop.ecommerce.domain.auth.dto.LoginResponse;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpRequest;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpResponse;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
-import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
-import com.teopteop.ecommerce.domain.auth.exception.UserException;
 import com.teopteop.ecommerce.domain.member.domain.Address;
 import com.teopteop.ecommerce.domain.member.domain.Member;
 import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
-import com.teopteop.ecommerce.domain.member.exception.MemberException;
 import com.teopteop.ecommerce.domain.member.infra.MemberJpaRepository;
-import jakarta.validation.Valid;
+import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,11 +29,11 @@ public class AuthService {
 
     public SignUpResponse registerUser(SignUpRequest request) {
         if(memberRepository.existsByEmail(request.email())) {
-            throw new MemberException(MemberErrorCode.EMAIL_DUPLICATE);
+            throw new ApplicationException(MemberErrorCode.EMAIL_DUPLICATE);
         }
 
         if(userRepository.existsByUsername(request.username())) {
-            throw new UserException(UserErrorCode.USERNAME_DUPLICATE);
+            throw new ApplicationException(UserErrorCode.USERNAME_DUPLICATE);
         }
 
         Member member = Member.create(
@@ -67,10 +64,10 @@ public class AuthService {
 
     public LoginResponse authenticate(LoginRequest request) {
         User findUser = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_CREDENTIALS));
+                .orElseThrow(() -> new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS));
 
         if(!passwordEncoder.matches(request.password(), findUser.getPassword())) {
-            throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
+            throw new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         String accessToken = "";
