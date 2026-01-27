@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.global.common.response;
+package com.teopteop.ecommerce.global.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

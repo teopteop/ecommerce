@@ -1,6 +1,6 @@
 package com.teopteop.ecommerce.global.exception;
 
-import com.teopteop.ecommerce.global.common.response.ApiResponse;
+import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

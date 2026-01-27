@@ -14,6 +14,7 @@ import com.teopteop.ecommerce.domain.member.domain.Member;
 import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
 import com.teopteop.ecommerce.domain.member.infra.MemberJpaRepository;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.global.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class AuthService {
+
+    //현재 단계에서 Member도메인 저장소는 추상화하지 않음
+    private final MemberJpaRepository memberRepository;
     private final UserRepository userRepository;
-    private final MemberJpaRepository memberRepository; //현재 단계에서 Member도메인 저장소는 추상화하지 않음
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public SignUpResponse registerUser(SignUpRequest request) {
         if(memberRepository.existsByEmail(request.email())) {
@@ -61,7 +65,6 @@ public class AuthService {
         return new SignUpResponse(savedUser.getId(), savedUser.getUsername());
     }
 
-
     public LoginResponse authenticate(LoginRequest request) {
         User findUser = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS));
@@ -70,7 +73,7 @@ public class AuthService {
             throw new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
-        String accessToken = "";
+        String accessToken = jwtUtil.createAccessToken(findUser.getId(), findUser.getRole());
 
         return new LoginResponse(accessToken);
     }

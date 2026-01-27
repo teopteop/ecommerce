@@ -2,6 +2,7 @@ package com.teopteop.ecommerce.domain.auth.infra;
 
 import com.teopteop.ecommerce.domain.auth.domain.User;
 import com.teopteop.ecommerce.domain.auth.domain.UserRepository;
+import com.teopteop.ecommerce.domain.auth.domain.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -26,5 +27,15 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findByUsername(String username) {
         return jpaRepository.findByUsername(username);
+    }
+
+    @Override
+    public Optional<User> findActiveUserById(Long userId) {
+        return jpaRepository.findActiveUserById(userId);
+    }
+
+    @Override
+    public boolean existsActiveUserById(Long userId, UserStatus status) {
+        return jpaRepository.existsActiveUserById(userId, status);
     }
 }

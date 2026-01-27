@@ -5,7 +5,7 @@ import com.teopteop.ecommerce.domain.auth.dto.LoginRequest;
 import com.teopteop.ecommerce.domain.auth.dto.LoginResponse;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpRequest;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpResponse;
-import com.teopteop.ecommerce.global.common.response.ApiResponse;
+import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
