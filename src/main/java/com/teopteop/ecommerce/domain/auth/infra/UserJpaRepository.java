@@ -17,4 +17,5 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     Optional<User> findActiveUserById(@Param("userId") Long userId);
 
     boolean existsActiveUserById(Long userId, UserStatus status);
+
 }
