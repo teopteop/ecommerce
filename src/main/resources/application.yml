@@ -13,3 +13,8 @@ spring:
         format_sql: true
         show_sql: true
     open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 3600000 #1시간
+  refresh-token-expiration: 1296000000 #15일
