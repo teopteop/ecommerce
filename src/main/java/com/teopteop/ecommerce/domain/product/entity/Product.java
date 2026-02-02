@@ -24,12 +24,12 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal price;
 
-    @Column(nullable = false)
-    private int stockQuantity;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProductStatus status;
+
+    @Column(nullable = false)
+    private Long categoryId;
 
     @Column(nullable = false)
     private boolean deleted;
@@ -37,20 +37,24 @@ public class Product extends BaseEntity {
     private Product(
             String name,
             BigDecimal price,
-            int stockQuantity
+            Long categoryId
     ) {
         this.name = name;
         this.price = price;
-        this.stockQuantity = stockQuantity;
         this.status = ProductStatus.STOPPED;
+        this.categoryId = categoryId;
         this.deleted = false;
     }
 
     public static Product create(
             String name,
             BigDecimal price,
-            int stockQuantity
+            Long categoryId
     ) {
-        return new Product(name, price, stockQuantity);
+        return new Product(name, price, categoryId);
+    }
+
+    public void markDeleted() {
+        this.deleted = true;
     }
 }
