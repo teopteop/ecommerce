@@ -4,6 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
 
@@ -13,7 +17,20 @@ public class JpaAuditingConfig {
 
     @Bean
     public AuditorAware<String> auditorProvider() {
-        //추후 Security Context에서 로그인한 사용자의 ID 값 가져오도록 기능 추가
-        return () -> Optional.of("SYSTEM");
+        return () -> {
+            // SecurityContext에서 인증 객체 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (
+                    authentication == null // SecurityContext에 인증정보가 없을 때
+                    || !authentication.isAuthenticated()  // 인증 객체는 있지만 인증되지 않은 상태
+                    || authentication instanceof AnonymousAuthenticationToken // 익명토큰일 때
+            ) {
+                return Optional.empty();
+            }
+
+            UserDetails principal = (UserDetails) authentication.getPrincipal();
+            return Optional.of(principal.getUsername());
+        };
     }
 }

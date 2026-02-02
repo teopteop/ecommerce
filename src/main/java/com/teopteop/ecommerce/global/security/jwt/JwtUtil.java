@@ -1,25 +1,21 @@
 package com.teopteop.ecommerce.global.security.jwt;
 
-import com.teopteop.ecommerce.domain.auth.domain.UserRepository;
-import com.teopteop.ecommerce.domain.auth.domain.UserRole;
-import com.teopteop.ecommerce.domain.auth.domain.UserStatus;
+import com.teopteop.ecommerce.domain.auth.entity.UserRole;
+import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -28,20 +24,19 @@ public class JwtUtil {
     private final SecretKey secretKey;
     private final long accessTokenValidity;
     private final long refreshTokenValidity;
-    private final UserRepository userRepository;
 
     /**
      * JWT Util 생성자
      * @param secret Base64로 인코딩된 비밀 키
      * @param accessTokenValidity 액세스 토큰 유효시간(ms)
      * @param refreshTokenValidity 리프레시 토큰 유효시간(ms)
-     * @param userRepository 유저 존재 여부 확인용 Repository
+     * @param userJpaRepository 유저 존재 여부 확인용 Repository
      */
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration}") long accessTokenValidity,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenValidity,
-            UserRepository userRepository
+            UserJpaRepository userJpaRepository
     ) {
         byte[] decodedKey = Base64.getDecoder().decode(secret);
         if(decodedKey.length < 32) {
@@ -51,7 +46,6 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(decodedKey);
         this.accessTokenValidity = accessTokenValidity;
         this.refreshTokenValidity = refreshTokenValidity;
-        this.userRepository = userRepository;
     }
 
     /**
@@ -125,13 +119,8 @@ public class JwtUtil {
         Long userId = getUserId(token);
         UserRole role = getUserRole(token);
 
-        if(!userRepository.existsActiveUserById(userId, UserStatus.ACTIVE)) {
-            throw new ApplicationException(JwtErrorCode.USER_NOT_FOUND);
-        }
-
-        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role.name()));
-        UserDetails principal = new User(String.valueOf(userId), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        UserPrincipal principal = new UserPrincipal(String.valueOf(userId), "", role);
+        return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
     public long getUserId(String token) {
