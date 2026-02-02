@@ -1,25 +1,21 @@
 package com.teopteop.ecommerce.global.security.jwt;
 
 import com.teopteop.ecommerce.domain.auth.entity.UserRole;
-import com.teopteop.ecommerce.domain.auth.entity.UserStatus;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -28,7 +24,6 @@ public class JwtUtil {
     private final SecretKey secretKey;
     private final long accessTokenValidity;
     private final long refreshTokenValidity;
-    private final UserJpaRepository userJpaRepository;
 
     /**
      * JWT Util 생성자
@@ -51,7 +46,6 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(decodedKey);
         this.accessTokenValidity = accessTokenValidity;
         this.refreshTokenValidity = refreshTokenValidity;
-        this.userJpaRepository = userJpaRepository;
     }
 
     /**
@@ -125,13 +119,8 @@ public class JwtUtil {
         Long userId = getUserId(token);
         UserRole role = getUserRole(token);
 
-        if(!userJpaRepository.existsActiveUserById(userId, UserStatus.ACTIVE)) {
-            throw new ApplicationException(JwtErrorCode.USER_NOT_FOUND);
-        }
-
-        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role.name()));
-        UserDetails principal = new User(String.valueOf(userId), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        UserPrincipal principal = new UserPrincipal(String.valueOf(userId), "", role);
+        return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
     public long getUserId(String token) {
