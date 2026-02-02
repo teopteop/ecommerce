@@ -4,9 +4,8 @@ import com.teopteop.ecommerce.domain.product.entity.ProductStatus;
 
 import java.math.BigDecimal;
 
-public record ProductRequest(
+public record ProductAdminUpdateRequest(
         String name,
         BigDecimal price,
-        Integer stockQuantity, // null 허용
         ProductStatus status
 ) {}
