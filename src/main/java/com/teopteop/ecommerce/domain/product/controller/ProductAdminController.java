@@ -38,7 +38,7 @@ public class ProductAdminController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductAdminResponse>> getProductWithDeleted(
-            @RequestParam Long id,
+            @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         UserRole role = principal.getRole();
@@ -56,19 +56,17 @@ public class ProductAdminController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductAdminResponse>> updateProduct(
+    public ResponseEntity<ApiResponse<Void>> updateProduct(
             @PathVariable Long id,
             @RequestBody ProductAdminUpdateRequest request
     ) {
         productCommandService.updateProduct(id, request);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                .body(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(@RequestParam Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {
         productCommandService.markProductDeleted(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                .body(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

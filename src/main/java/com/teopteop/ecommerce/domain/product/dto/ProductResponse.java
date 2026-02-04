@@ -7,13 +7,15 @@ import java.math.BigDecimal;
 public record ProductResponse(
     Long id,
     String name,
-    BigDecimal price
+    BigDecimal price,
+    Long categoryId
 ) {
     public static ProductResponse fromEntity(Product product) {
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
-                product.getPrice()
+                product.getPrice(),
+                product.getCategoryId()
         );
     }
 }

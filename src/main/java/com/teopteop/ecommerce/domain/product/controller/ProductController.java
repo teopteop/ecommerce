@@ -22,9 +22,7 @@ public class ProductController {
     private final ProductQueryService productQueryService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(
-            @RequestParam Long id
-    ) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(productQueryService.findProduct(id)));
     }
 
