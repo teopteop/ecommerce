@@ -31,7 +31,6 @@ public class ProductCommandService {
         Product savedProduct = productJpaRepository.save(product);
 
         eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct.getId(), request.stockQuantity(), request.categoryId()));
-
         return new ProductAdminCreateResponse(savedProduct.getId());
     }
 
@@ -46,7 +45,7 @@ public class ProductCommandService {
         if (request.name() == null && request.status() == null && request.status() == null) {
             throw new ApplicationException(ProductErrorCode.INVALID_UPDATE_REQUEST);
         }
-
+      
         long updateRows = productQueryRepository.updateProductDynamic(id, request);
 
         if(updateRows == 0) {
