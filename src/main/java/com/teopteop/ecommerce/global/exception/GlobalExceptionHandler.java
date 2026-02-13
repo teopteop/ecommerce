@@ -1,11 +1,17 @@
 package com.teopteop.ecommerce.global.exception;
 
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.net.BindException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 @Slf4j
@@ -27,6 +33,47 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(
                         errorCode.getMessage()
                 ));
+    }
+
+    /**
+     * DTO 바인딩 검증 예외 처리
+     * - @Valid / @RequestBody 바인딩 과정에서 발생하는 검증 실패 처리
+     * - json 요청 바디의 필드 유효성 검증 실패 시 발생
+     * - HTTP 400 (Bad Request) 반환
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String errors = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        log.warn("Validation failed: {}", errors);
+
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(errors));
+    }
+
+    /**
+     * 단일 파라미터 제약조건 위반 예외 처리
+     * - @Validated 적용 컨트롤러에서 @RequestParam, @PathVariable 제약 조건 위반 시 발생
+     * - HTTP 400 (Bad Request) 반환
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
+        String errors = e.getConstraintViolations()
+                .stream()
+                .map(violation -> {
+                    String field = violation.getPropertyPath().toString();
+                    return field + ": " + violation.getMessage();
+                })
+                .collect(Collectors.joining(", "));
+
+        log.warn("Validation failed: {}", errors);
+
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(errors));
     }
 
     /**
