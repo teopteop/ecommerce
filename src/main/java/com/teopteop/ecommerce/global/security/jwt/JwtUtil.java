@@ -119,7 +119,7 @@ public class JwtUtil {
         Long userId = getUserId(token);
         UserRole role = getUserRole(token);
 
-        UserPrincipal principal = new UserPrincipal(String.valueOf(userId), "", role);
+        UserPrincipal principal = new UserPrincipal(userId, String.valueOf(userId), "", role);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
