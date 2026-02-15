@@ -34,6 +34,9 @@ public class Order extends BaseTimeEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
     private List<OrderItem> items = new ArrayList<>();
 
+    @Embedded
+    private Delivery delivery;
+
     private Order(Member member) {
         this.member = member;
         this.totalPrice = BigDecimal.ZERO;
