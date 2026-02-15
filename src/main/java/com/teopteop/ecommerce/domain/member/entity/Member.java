@@ -1,6 +1,7 @@
 package com.teopteop.ecommerce.domain.member.entity;
 
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
+import com.teopteop.ecommerce.global.common.vo.Address;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

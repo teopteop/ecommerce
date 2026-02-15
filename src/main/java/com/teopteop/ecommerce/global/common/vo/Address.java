@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.member.entity;
+package com.teopteop.ecommerce.global.common.vo;
 
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
