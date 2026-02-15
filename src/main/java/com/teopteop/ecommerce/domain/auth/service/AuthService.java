@@ -56,7 +56,7 @@ public class AuthService {
                 request.username(),
                 passwordEncoder.encode(request.password()),
                 UserRole.ROLE_USER,
-                savedMember
+                savedMember.getId()
         );
 
         User savedUser = userJpaRepository.save(user);
