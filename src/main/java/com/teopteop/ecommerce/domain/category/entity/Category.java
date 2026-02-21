@@ -23,6 +23,7 @@ public class Category extends BaseEntity {
     private String code; // 내부 관리용 코드, 예: "MEN_CLOTHES"
 
     // 최상위 카테고리는 null
+    @Column(name = "parent_id")
     private Long parentId;
 
     @Column(nullable = false)

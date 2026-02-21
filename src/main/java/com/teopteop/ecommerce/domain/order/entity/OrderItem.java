@@ -27,7 +27,7 @@ public class OrderItem extends BaseTimeEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
+    @Column(name = "order_price", nullable = false)
     private BigDecimal orderPrice; // 주문 당시 가격
 
     @Column(nullable = false)

@@ -30,7 +30,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(nullable = false)
+    @Column(name= "member_id",nullable = false)
     private Long memberId;
 
     private User(
