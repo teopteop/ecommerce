@@ -24,7 +24,7 @@ public class Order extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-    @Column(name = "total_price", nullable = false)
+    @Column(name = "total_price", nullable = false, precision = 19, scale = 0)
     private BigDecimal totalPrice;
 
     @Enumerated(EnumType.STRING)
