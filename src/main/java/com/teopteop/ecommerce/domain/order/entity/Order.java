@@ -24,7 +24,7 @@ public class Order extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-    @Column(nullable = false)
+    @Column(name = "total_price", nullable = false, precision = 19, scale = 0)
     private BigDecimal totalPrice;
 
     @Enumerated(EnumType.STRING)
@@ -33,6 +33,9 @@ public class Order extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
     private List<OrderItem> items = new ArrayList<>();
+
+    @Embedded
+    private Delivery delivery;
 
     private Order(Member member) {
         this.member = member;

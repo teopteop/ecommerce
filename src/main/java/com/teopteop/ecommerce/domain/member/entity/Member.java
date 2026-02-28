@@ -1,6 +1,7 @@
 package com.teopteop.ecommerce.domain.member.entity;
 
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
+import com.teopteop.ecommerce.global.common.vo.Address;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class Member extends BaseTimeEntity {
     @Column(unique = true, nullable = false, length = 50)
     private String email;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "phone_number",nullable = false, length = 20)
     private String phoneNumber;
 
     @Embedded

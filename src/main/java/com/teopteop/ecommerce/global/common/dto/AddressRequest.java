@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.member.dto;
+package com.teopteop.ecommerce.global.common.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

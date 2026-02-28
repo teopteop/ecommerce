@@ -9,7 +9,7 @@ import com.teopteop.ecommerce.domain.auth.dto.SignUpResponse;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
-import com.teopteop.ecommerce.domain.member.entity.Address;
+import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
 import com.teopteop.ecommerce.domain.member.repository.MemberJpaRepository;
@@ -56,7 +56,7 @@ public class AuthService {
                 request.username(),
                 passwordEncoder.encode(request.password()),
                 UserRole.ROLE_USER,
-                savedMember
+                savedMember.getId()
         );
 
         User savedUser = userJpaRepository.save(user);

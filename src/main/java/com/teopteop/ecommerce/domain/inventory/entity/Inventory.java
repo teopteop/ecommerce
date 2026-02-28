@@ -18,7 +18,7 @@ public class Inventory extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name= "product_id",unique = true, nullable = false)
     private Long productId;
 
     @Column(nullable = false)

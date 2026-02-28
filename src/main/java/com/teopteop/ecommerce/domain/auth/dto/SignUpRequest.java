@@ -1,6 +1,6 @@
 package com.teopteop.ecommerce.domain.auth.dto;
 
-import com.teopteop.ecommerce.domain.member.dto.AddressRequest;
+import com.teopteop.ecommerce.global.common.dto.AddressRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

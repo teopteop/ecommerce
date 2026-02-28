@@ -1,6 +1,5 @@
 package com.teopteop.ecommerce.domain.auth.entity;
 
-import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -31,29 +30,28 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private UserStatus status;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(name= "member_id",nullable = false)
+    private Long memberId;
 
     private User(
             String username,
             String encodedPassword,
             UserRole role,
-            Member member
+            Long memberId
     ) {
         this.username = username;
         this.password = encodedPassword;
         this.role = role;
         this.status = UserStatus.ACTIVE;
-        this.member = member;
+        this.memberId = memberId;
     }
 
     public static User create(
             String username,
             String encodedPassword,
             UserRole role,
-            Member member
+            Long memberId
     ) {
-        return new User(username, encodedPassword, role, member);
+        return new User(username, encodedPassword, role, memberId);
     }
 }
