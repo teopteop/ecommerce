@@ -25,9 +25,8 @@ public class OrderItem extends BaseTimeEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
 
     @Column(name = "order_price", nullable = false, precision = 19, scale = 0)
     private BigDecimal orderPrice; // 주문 당시 가격
@@ -38,15 +37,23 @@ public class OrderItem extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private OrderItemStatus status;
 
-    private OrderItem(Product product, int quantity) {
-        this.product = product;
-        this.orderPrice = product.getPrice();
+    private OrderItem(
+            Long productId,
+            BigDecimal orderPrice,
+            int quantity
+    ) {
+        this.productId = productId;
+        this.orderPrice = orderPrice;
         this.quantity = quantity;
         this.status = OrderItemStatus.ORDERED;
     }
 
-    public static OrderItem create(Product product, int quantity) {
-        return new OrderItem(product, quantity);
+    public static OrderItem create(
+            Long productId,
+            BigDecimal orderPrice,
+            int quantity
+    ) {
+        return new OrderItem(productId, orderPrice, quantity);
     }
 
     /**
