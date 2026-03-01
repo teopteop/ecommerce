@@ -1,6 +1,5 @@
 package com.teopteop.ecommerce.domain.product.service;
 
-import com.teopteop.ecommerce.domain.auth.entity.UserRole;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminResponse;
 import com.teopteop.ecommerce.domain.product.dto.ProductResponse;
 import com.teopteop.ecommerce.domain.product.entity.Product;
