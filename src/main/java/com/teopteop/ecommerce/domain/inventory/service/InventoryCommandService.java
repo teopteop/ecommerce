@@ -1,18 +1,13 @@
 package com.teopteop.ecommerce.domain.inventory.service;
 
-import com.teopteop.ecommerce.domain.inventory.dto.InventoryResponse;
 import com.teopteop.ecommerce.domain.inventory.dto.InventoryStockRequest;
 import com.teopteop.ecommerce.domain.inventory.entity.Inventory;
+import com.teopteop.ecommerce.domain.inventory.entity.InventoryAdjustReason;
 import com.teopteop.ecommerce.domain.inventory.exception.InventoryErrorCode;
 import com.teopteop.ecommerce.domain.inventory.repository.InventoryJpaRepository;
-import com.teopteop.ecommerce.global.common.dto.ApiResponse;
-import com.teopteop.ecommerce.global.common.dto.PageResponse;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,29 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class InventoryService {
+public class InventoryCommandService {
 
     private final InventoryJpaRepository inventoryJpaRepository;
 
-    @Transactional(readOnly = true)
-    public InventoryResponse findInventory(Long id) {
-        return InventoryResponse.fromEntity(inventoryJpaRepository.findById(id)
-                .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND)));
-    }
-
-    @Transactional(readOnly = true)
-    public InventoryResponse findByProductId(Long productId) {
-        return InventoryResponse.fromEntity(inventoryJpaRepository.findByProductId(productId)
-                .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND)));
-    }
-
-    @Transactional(readOnly = true)
-    public Page<InventoryResponse> findInventoriesUnderThreshold(int threshold, Pageable pageable) {
-        Page<Inventory> foundInventories = inventoryJpaRepository.findInventoriesUnderThreshold(threshold, pageable);
-        return foundInventories.map(InventoryResponse::fromEntity);
-    }
-
     public void restock(Long id, InventoryStockRequest request) {
+        if (request.reason() != InventoryAdjustReason.RESTOCK) {
+            throw new ApplicationException(InventoryErrorCode.INVALID_ADJUST_REASON);
+        }
+
         Inventory foundInventory = inventoryJpaRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
@@ -51,6 +32,10 @@ public class InventoryService {
     }
 
     public void deduct(Long id, InventoryStockRequest request) {
+        if (request.reason() != InventoryAdjustReason.ADMIN_DEDUCT) {
+            throw new ApplicationException(InventoryErrorCode.INVALID_ADJUST_REASON);
+        }
+
         Inventory foundInventory = inventoryJpaRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
@@ -58,9 +43,4 @@ public class InventoryService {
         log.info("재고가 차감되었습니다. 수량:{}, 사유:{}", request.amount(), request.reason());
     }
 
-    public Page<InventoryResponse> findInventories(Pageable pageable) {
-        Page<Inventory> foundInventories = inventoryJpaRepository.findAll(pageable);
-
-        return foundInventories.map(InventoryResponse::fromEntity);
-    }
 }

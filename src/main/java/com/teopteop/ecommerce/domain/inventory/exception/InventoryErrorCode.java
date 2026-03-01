@@ -8,7 +8,8 @@ public enum InventoryErrorCode implements BaseErrorCode {
     INVALID_INVENTORY_QUANTITY(HttpStatus.BAD_REQUEST, "재고 변경 수량은 0보다 커야 합니다."),
     OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "재고가 부족합니다."),
     INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 상품 ID입니다."),
-    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 인벤토리를 찾을 수 없습니다.");
+    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 인벤토리를 찾을 수 없습니다."),
+    INVALID_ADJUST_REASON(HttpStatus.BAD_REQUEST, "재고 조정 사유가 올바르지 않습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AuthService {
+public class AuthCommandService {
 
     private final MemberJpaRepository memberJpaRepository;
     private final UserJpaRepository userJpaRepository;
@@ -64,6 +64,8 @@ public class AuthService {
         return new SignUpResponse(savedUser.getId(), savedUser.getUsername());
     }
 
+    // 조회용 메서드지만 '인증 행위' 자체가 Command에 가깝고 JWT 발급이 포함되므로 AuthQueryService로 분리하지 않음
+    @Transactional(readOnly = true)
     public LoginResponse authenticate(LoginRequest request) {
         User findUser = userJpaRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS));
