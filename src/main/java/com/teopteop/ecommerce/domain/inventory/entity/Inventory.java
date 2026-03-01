@@ -8,6 +8,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "inventories")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,6 +26,10 @@ public class Inventory extends BaseTimeEntity {
 
     @Column(nullable = false)
     private int quantity;
+
+    // 성능 이슈 방지: 직접 접근 금지, 로그 조회는 별도 쿼리 사용할 것
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.PERSIST)
+    private final List<InventoryHistory> histories = new ArrayList<>();
 
     private Inventory(Long productId, int quantity) {
         if (productId == null) {
@@ -63,5 +70,10 @@ public class Inventory extends BaseTimeEntity {
 
     public boolean isOutOfStock() {
         return this.quantity == 0;
+    }
+
+    // 연관관계 편의 메서드
+    public void addHistory(int adjustedQuantity, InventoryAdjustReason reason) {
+        this.histories.add(InventoryHistory.create(this, adjustedQuantity, reason));
     }
 }

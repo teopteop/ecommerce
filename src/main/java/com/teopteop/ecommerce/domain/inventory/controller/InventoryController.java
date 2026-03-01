@@ -64,7 +64,7 @@ public class InventoryController {
             @PathVariable Long id,
             @RequestBody InventoryStockRequest request
     ) {
-        inventoryCommandService.deduct(id, request);
+        inventoryCommandService.deductByAdmin(id, request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
