@@ -1,6 +1,7 @@
 package com.teopteop.ecommerce.domain.order.entity;
 
 import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
@@ -69,6 +70,24 @@ public class Order extends BaseTimeEntity {
     }
 
     // === 상태전이 메서드 ===
+
+    // Payment -> Order 상태 전이
+    public void markPaid() {
+        if (this.status != OrderStatus.CREATED) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = OrderStatus.PAID;
+    }
+
+    public void markPaymentFailed() {
+        if (this.status != OrderStatus.CREATED) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = OrderStatus.PAYMENT_FAILED;
+    }
+
     // Delivery 상태 전이 위임
     public void startShipping() {
         if (this.status != OrderStatus.PAID) {
