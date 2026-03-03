@@ -29,6 +29,9 @@ spring:
       port: ${REDIS_PORT:6379}
       timeout: 2000ms
 
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 3600000 #1시간
