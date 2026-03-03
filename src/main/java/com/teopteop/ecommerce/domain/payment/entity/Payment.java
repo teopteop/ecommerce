@@ -33,7 +33,7 @@ public class Payment extends BaseTimeEntity {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 0)
     private BigDecimal totalAmount;
 
-    @Column(name = "canceled_amount",nullable = false, precision = 19, scale = 0)
+    @Column(name = "canceled_amount", nullable = false, precision = 19, scale = 0)
     private BigDecimal canceledAmount;
 
     @Enumerated(EnumType.STRING)
@@ -55,7 +55,7 @@ public class Payment extends BaseTimeEntity {
             String orderNumber,
             BigDecimal totalAmount
     ) {
-        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <=0) {
+        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ApplicationException(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
         }
 
@@ -104,18 +104,19 @@ public class Payment extends BaseTimeEntity {
     }
 
     public void cancelFully() {
-        if (this.status != PaymentStatus.DONE) {
+        if (this.status != PaymentStatus.DONE
+                && this.status != PaymentStatus.PARTIAL_CANCELED) { // 부분 취소 상태에서도 전체 취소 가능
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
+        this.canceledAmount = this.totalAmount;
         this.status = PaymentStatus.CANCELED;
         this.canceledAt = LocalDateTime.now();
     }
 
     public void cancelPartially(BigDecimal amount) {
         if (this.status != PaymentStatus.DONE
-            && this.status != PaymentStatus.PARTIAL_CANCELED // 부분 취소 상태에서도 추가로 취소 가능
-        ) {
+                && this.status != PaymentStatus.PARTIAL_CANCELED) { // 부분 취소 상태에서도 추가로 취소 가능
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 

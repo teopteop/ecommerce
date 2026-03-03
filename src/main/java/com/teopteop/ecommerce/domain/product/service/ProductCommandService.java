@@ -51,7 +51,7 @@ public class ProductCommandService {
     }
 
     public void updateProduct(Long id, ProductAdminUpdateRequest request) {
-        if (request.name() == null && request.status() == null && request.status() == null) {
+        if (request.name() == null && request.price() == null && request.status() == null) {
             throw new ApplicationException(ProductErrorCode.INVALID_UPDATE_REQUEST);
         }
 

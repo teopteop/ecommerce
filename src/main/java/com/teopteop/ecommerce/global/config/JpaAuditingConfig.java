@@ -1,5 +1,6 @@
 package com.teopteop.ecommerce.global.config;
 
+import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -7,7 +8,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
 
@@ -16,7 +16,7 @@ import java.util.Optional;
 public class JpaAuditingConfig {
 
     @Bean
-    public AuditorAware<String> auditorProvider() {
+    public AuditorAware<Long> auditorProvider() {
         return () -> {
             // SecurityContext에서 인증 객체 가져오기
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -29,8 +29,8 @@ public class JpaAuditingConfig {
                 return Optional.empty();
             }
 
-            UserDetails principal = (UserDetails) authentication.getPrincipal();
-            return Optional.of(principal.getUsername());
+            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+            return Optional.of(principal.getId());
         };
     }
 }
