@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
@@ -21,5 +22,7 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 
     @NonNull
     Page<Product> findAll(@NonNull Pageable pageable);
+
+    List<Product> findByIdInAndDeletedFalseAndStatus(List<Long> ids, ProductStatus status);
 
 }
