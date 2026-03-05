@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -41,6 +43,17 @@ public class ProductQueryService {
 
     public Page<ProductAdminResponse> findProductsWithDeleted(Pageable pageable) {
         return productQueryRepository.findProductsByAdmin(pageable);
+    }
+
+    public List<Product> findSellingProductsByIds(List<Long> productIds) {
+        List<Product> foundProducts = productJpaRepository
+                .findByIdInAndDeletedFalseAndStatus(productIds, ProductStatus.SELLING);
+
+        if (productIds.size() != foundProducts.size()) {
+            throw new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        return foundProducts;
     }
 
 }

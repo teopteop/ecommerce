@@ -77,4 +77,9 @@ public class InventoryCommandService {
 
     }
 
+    public Inventory registerInventory(Long productId, int stockQuantity) {
+        Inventory inventory = Inventory.create(productId, stockQuantity);
+        return inventoryJpaRepository.save(inventory);
+    }
+
 }
