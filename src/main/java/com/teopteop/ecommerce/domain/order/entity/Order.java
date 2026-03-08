@@ -46,7 +46,7 @@ public class Order extends BaseTimeEntity {
         this.memberId = memberId;
         this.orderNumber = orderNumber;
         this.totalPrice = BigDecimal.ZERO;
-        this.status = OrderStatus.CREATED;
+        this.status = OrderStatus.PENDING;
     }
 
     public static Order create(
@@ -70,10 +70,17 @@ public class Order extends BaseTimeEntity {
     }
 
     // === 상태전이 메서드 ===
+    public void cancel() {
+        if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = OrderStatus.CANCELED;
+    }
 
     // Payment -> Order 상태 전이
     public void markPaid() {
-        if (this.status != OrderStatus.CREATED) {
+        if (this.status != OrderStatus.PENDING) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -81,7 +88,7 @@ public class Order extends BaseTimeEntity {
     }
 
     public void markPaymentFailed() {
-        if (this.status != OrderStatus.CREATED) {
+        if (this.status != OrderStatus.PENDING) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
