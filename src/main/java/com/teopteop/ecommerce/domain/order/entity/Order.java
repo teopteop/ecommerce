@@ -78,9 +78,17 @@ public class Order extends BaseTimeEntity {
         this.status = OrderStatus.CANCELED;
     }
 
+    public void partialCancel()  {
+        if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = OrderStatus.PARTIAL_CANCELED;
+    }
+
     // Payment -> Order 상태 전이
     public void markPaid() {
-        if (this.status != OrderStatus.PENDING) {
+        if (this.status != OrderStatus.PENDING && this.status != OrderStatus.PAYMENT_FAILED) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -88,6 +96,7 @@ public class Order extends BaseTimeEntity {
     }
 
     public void markPaymentFailed() {
+        if (this.status == OrderStatus.PAYMENT_FAILED) return; // 멱등성 처리
         if (this.status != OrderStatus.PENDING) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
@@ -102,5 +111,6 @@ public class Order extends BaseTimeEntity {
         }
 
         this.delivery.ship();
+        this.status = OrderStatus.SHIPPED;
     }
 }
