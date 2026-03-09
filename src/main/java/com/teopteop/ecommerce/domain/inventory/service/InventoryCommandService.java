@@ -5,6 +5,7 @@ import com.teopteop.ecommerce.domain.inventory.entity.Inventory;
 import com.teopteop.ecommerce.domain.inventory.entity.InventoryAdjustReason;
 import com.teopteop.ecommerce.domain.inventory.exception.InventoryErrorCode;
 import com.teopteop.ecommerce.domain.inventory.repository.InventoryJpaRepository;
+import com.teopteop.ecommerce.domain.order.entity.OrderItem;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -21,6 +23,11 @@ import java.util.Map;
 public class InventoryCommandService {
 
     private final InventoryJpaRepository inventoryJpaRepository;
+
+    public Inventory registerInventory(Long productId, int stockQuantity) {
+        Inventory inventory = Inventory.create(productId, stockQuantity);
+        return inventoryJpaRepository.save(inventory);
+    }
 
     // 관리자 재고 입고
     public void restock(Long id, InventoryStockRequest request) {
@@ -34,6 +41,33 @@ public class InventoryCommandService {
         foundInventory.increase(request.amount());
         foundInventory.addHistory(request.amount(), request.reason());
     }
+
+    /**
+     * 주문 취소에 따른 재고 복구
+     * productId 오름차순 정렬로 모든 트랜잭션이 동일한 순서로 락을 획득하도록 강제
+     */
+    public void restoreForCancel(List<OrderItem> items) {
+        List<Long> productIds = items.stream()
+                .map(OrderItem::getProductId)
+                .toList();
+
+        List<Inventory> foundInventories = inventoryJpaRepository
+                .findByProductIdsWithLock(productIds.stream().sorted().toList());
+
+        Map<Long, Integer> quantities = items.stream()
+                .collect(Collectors.toMap(
+                        OrderItem::getProductId,
+                        OrderItem::getQuantity
+                ));
+
+        for (Inventory inventory : foundInventories) {
+            Integer quantity = quantities.get(inventory.getProductId());
+
+            inventory.increase(quantity);
+            inventory.addHistory(quantity, InventoryAdjustReason.ORDER_CANCEL);
+        }
+    }
+
 
     /**
      * 관리자 수동 재고 차감
@@ -75,11 +109,6 @@ public class InventoryCommandService {
             inventory.addHistory(quantity, InventoryAdjustReason.ORDER);
         }
 
-    }
-
-    public Inventory registerInventory(Long productId, int stockQuantity) {
-        Inventory inventory = Inventory.create(productId, stockQuantity);
-        return inventoryJpaRepository.save(inventory);
     }
 
 }
