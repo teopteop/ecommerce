@@ -112,17 +112,9 @@ public class PaymentCommandService {
         }
     }
 
-    public void handleWebhook(String secret, TossPaymentStatusChangedRequest request) {
-        String eventType = request.eventType();
+    public void handleStatusChanged(TossPaymentStatusChangedRequest request) {
+        TossPaymentData data = request.data();
 
-        switch (eventType) {
-            case "PAYMENT_STATUS_CHANGED" -> handleStatusChanged(request.data());
-            case "DEPOSIT_CALLBACK" -> handleDepositCallback(secret, request.data());
-            default -> log.warn("처리할 수 없는 웹훅 이벤트: {}", eventType);
-        }
-    }
-
-    private void handleStatusChanged(TossPaymentData data) {
         Payment foundPayment = paymentJpaRepository.findByOrderNumber(data.orderId())
                 .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
@@ -181,20 +173,18 @@ public class PaymentCommandService {
     }
 
     // 가상결제 완료
-    private void handleDepositCallback(String secret, TossPaymentData data) {
-        Payment foundPayment = paymentJpaRepository.findByOrderNumber(data.orderId())
+    public void handleDepositCallback(TossDepositCallbackRequest request) {
+        Payment foundPayment = paymentJpaRepository.findByOrderNumber(request.orderId())
                 .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         // secret 검증
-        if (!foundPayment.getWebhookSecret().equals(secret)) {
+        if (!foundPayment.getWebhookSecret().equals(request.secret())) {
             throw new ApplicationException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
         }
 
         foundPayment.completeDeposit();
-        Order foundOrder = orderQueryService.findByOrderNumber(data.orderId());
+        Order foundOrder = orderQueryService.findByOrderNumber(request.orderId());
         foundOrder.markPaid();
     }
-
-
 
 }
