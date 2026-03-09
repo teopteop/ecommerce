@@ -30,7 +30,7 @@ public class OrderController {
                 .body(ApiResponse.success(orderCommandService.registerOrder(principal.getId(), request)));
     }
 
-    @DeleteMapping("/cancel/{orderNumber}")
+    @PostMapping("/cancel/{orderNumber}")
     public ResponseEntity<ApiResponse<Void>> cancelOrder(
             @PathVariable String orderNumber,
             @Valid @RequestBody OrderCancelRequest request
@@ -39,7 +39,7 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @DeleteMapping("/partial-cancel/{orderNumber}")
+    @PostMapping("/partial-cancel/{orderNumber}")
     public ResponseEntity<ApiResponse<Void>> partialCancelOrder(
             @PathVariable String orderNumber,
             @Valid @RequestBody OrderPartialCancelRequest request
