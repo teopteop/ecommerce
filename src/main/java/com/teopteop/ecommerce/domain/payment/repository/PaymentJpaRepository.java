@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.payment.Repository;
+package com.teopteop.ecommerce.domain.payment.repository;
 
 import com.teopteop.ecommerce.domain.payment.entity.Payment;
 import jakarta.persistence.LockModeType;
@@ -13,4 +13,6 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Payment p where p.orderNumber = :orderNumber")
     Optional<Payment> findByOrderNumberForUpdate(String orderNumber); // 동시성 제어 비관락
+
+    Optional<Payment> findByOrderNumber(String orderNumber);
 }

@@ -8,5 +8,7 @@ public record TossConfirmResponse(
         String method,
         BigDecimal totalAmount,
         String status,
-        String approvedAt
+        String approvedAt,
+        String secret,                      // 가상계좌 사용 시 값 있음, 나머지는 null
+        TossVirtualAccount virtualAccount   // 가상계좌 사용 시 값 있음, 나머지는 null
 ) {}

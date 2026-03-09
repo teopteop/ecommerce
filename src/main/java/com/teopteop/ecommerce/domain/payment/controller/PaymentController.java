@@ -2,15 +2,13 @@ package com.teopteop.ecommerce.domain.payment.controller;
 
 import com.teopteop.ecommerce.domain.payment.dto.PaymentConfirmRequest;
 import com.teopteop.ecommerce.domain.payment.dto.PaymentConfirmResponse;
+import com.teopteop.ecommerce.domain.payment.dto.TossPaymentStatusChangedRequest;
 import com.teopteop.ecommerce.domain.payment.service.PaymentCommandService;
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,5 +20,14 @@ public class PaymentController {
     @PostMapping("/confirm")
     public ResponseEntity<ApiResponse<PaymentConfirmResponse>> confirm(@Valid @RequestBody PaymentConfirmRequest request) {
         return ResponseEntity.ok(ApiResponse.success(paymentCommandService.confirm(request)));
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<ApiResponse<Void>> webhook(
+            @RequestHeader("Authorization") String secret,
+            @RequestBody TossPaymentStatusChangedRequest request
+    ) {
+        paymentCommandService.handleWebhook(secret, request);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

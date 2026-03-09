@@ -1,33 +1,26 @@
 package com.teopteop.ecommerce.domain.order.service;
 
 import com.teopteop.ecommerce.domain.auth.entity.User;
-import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
-import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
-import com.teopteop.ecommerce.domain.inventory.repository.InventoryJpaRepository;
+import com.teopteop.ecommerce.domain.auth.service.UserQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.member.entity.Member;
-import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
-import com.teopteop.ecommerce.domain.member.repository.MemberJpaRepository;
-import com.teopteop.ecommerce.domain.order.dto.OrderCreateRequest;
-import com.teopteop.ecommerce.domain.order.dto.OrderCreateResponse;
-import com.teopteop.ecommerce.domain.order.dto.OrderItemRequest;
-import com.teopteop.ecommerce.domain.order.entity.Delivery;
-import com.teopteop.ecommerce.domain.order.entity.Order;
-import com.teopteop.ecommerce.domain.order.entity.OrderItem;
+import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
+import com.teopteop.ecommerce.domain.order.dto.*;
+import com.teopteop.ecommerce.domain.order.entity.*;
+import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderItemErrorCode;
 import com.teopteop.ecommerce.domain.order.repository.OrderJpaRepository;
-import com.teopteop.ecommerce.domain.payment.Repository.PaymentJpaRepository;
-import com.teopteop.ecommerce.domain.payment.entity.Payment;
+import com.teopteop.ecommerce.domain.payment.service.PaymentCommandService;
 import com.teopteop.ecommerce.domain.product.entity.Product;
-import com.teopteop.ecommerce.domain.product.entity.ProductStatus;
-import com.teopteop.ecommerce.domain.product.exception.ProductErrorCode;
-import com.teopteop.ecommerce.domain.product.repository.ProductJpaRepository;
+import com.teopteop.ecommerce.domain.product.service.ProductQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,21 +33,21 @@ import java.util.stream.Collectors;
 public class OrderCommandService {
 
     private final OrderJpaRepository orderJpaRepository;
-    private final UserJpaRepository userJpaRepository;
-    private final MemberJpaRepository memberJpaRepository;
-    private final ProductJpaRepository productJpaRepository;
-    private final PaymentJpaRepository paymentJpaRepository;
-    private final InventoryCommandService inventoryCommandService;
 
-    public OrderCreateResponse registerOder(Long userId, OrderCreateRequest request) {
+    private final UserQueryService userQueryService;
+    private final MemberQueryService memberQueryService;
+    private final ProductQueryService productQueryService;
+
+    private final InventoryCommandService inventoryCommandService;
+    private final PaymentCommandService paymentCommandService;
+
+    public OrderCreateResponse registerOrder(Long userId, OrderCreateRequest request) {
 
         // 1. User 조회 -> memberId 확보
-        User foundUser = userJpaRepository.findActiveUserById(userId)
-                .orElseThrow(() -> new ApplicationException(UserErrorCode.USER_NOT_FOUND));
+        User foundUser = userQueryService.findActiveUserById(userId);
 
         // 2. Member 조회 -> 수신자 정보
-        Member foundMember = memberJpaRepository.findById(foundUser.getMemberId())
-                .orElseThrow(() -> new ApplicationException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member foundMember = memberQueryService.findById(foundUser.getMemberId());
 
         // 3. 상품 ID 목록 추출 후 한 번에 조회
         List<Long> productIds = request.items().stream()
@@ -62,11 +55,7 @@ public class OrderCommandService {
                 .toList();
 
         List<Product> foundProducts =
-                productJpaRepository.findByIdInAndDeletedFalseAndStatus(productIds, ProductStatus.SELLING);
-
-        if (foundProducts.size() != productIds.size()) {
-            throw new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND);
-        }
+                productQueryService.findSellingProductsByIds(productIds);
 
         // 4. productId -> Product 맵 변환 (가격 조회용)
         Map<Long, Product> productMap = foundProducts.stream()
@@ -96,13 +85,83 @@ public class OrderCommandService {
         Delivery delivery = Delivery.create(foundMember.getName(), foundMember.getPhoneNumber(), deliveryAddress);
         order.linkDelivery(delivery);
 
-        // 9. 저장 (CaseCadeType.PERSIST로 인해 OrderItem, Delivery 함께 저장)
+        // 9. 저장 (CascadeType.PERSIST로 인해 OrderItem, Delivery 함께 저장)
         Order savedOrder = orderJpaRepository.save(order);
 
-        // 10. Payment 생성 및 저장
-        Payment payment = Payment.create(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getTotalPrice());
-        paymentJpaRepository.save(payment);
+        // 10. Payment 저장 메서드 호출
+        paymentCommandService.createPayment(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getTotalPrice());
 
-        return new OrderCreateResponse(savedOrder.getId());
+        return new OrderCreateResponse(savedOrder.getId(), savedOrder.getOrderNumber());
+    }
+
+    public void cancelOrder(String orderNumber, OrderCancelRequest request) {
+
+        // 1. Order 조회
+        Order foundOrder = orderJpaRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        // 2. 취소 가능 여부 확인
+        if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        // 3. Order 상태 전이
+        foundOrder.cancel();
+
+        // 4. OrderItem 전체 취소
+        List<OrderItem> items = foundOrder.getItems();
+        items.forEach(OrderItem::cancel);
+
+        // 5. 재고 복구
+        inventoryCommandService.restoreForCancel(items);
+
+        // 6. Payment 전액 취소
+        paymentCommandService.cancelPayment(orderNumber, request.cancelReason(), null);
+    }
+
+    public void partialCancelOrder(String orderNumber, OrderPartialCancelRequest request) {
+
+        // 1. Order 조회
+        Order foundOrder = orderJpaRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        // 2. 취소 가능 여부 확인
+        if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
+            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        // 3. 취소할 아이템 필터링
+        List<OrderItem> itemsToCancel = foundOrder.getItems().stream()
+                .filter(item -> request.orderItemIds().contains(item.getId()))
+                .toList();
+
+        if (itemsToCancel.isEmpty()) {
+            throw new ApplicationException(OrderItemErrorCode.ORDER_ITEM_NOT_FOUND);
+        }
+
+        // 4. 아이템 취소
+        itemsToCancel.forEach(OrderItem::cancel);
+
+        // 5. 취소 금액 계산 (주문 당시 가격 * 수량 합산)
+        BigDecimal cancelAmount = itemsToCancel.stream()
+                .map(item -> item.getOrderPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 6. 남은 아이템 중 ORDERED 상태인 아이템이 있으면 부분취소, 없을 시 전체 취소
+        boolean hasRemainingItems = foundOrder.getItems().stream()
+                .anyMatch(item -> item.getStatus() == OrderItemStatus.ORDERED);
+
+        if (hasRemainingItems) {
+            foundOrder.partialCancel();
+        } else {
+            foundOrder.cancel();
+        }
+
+        // 7. 재고 복구
+        inventoryCommandService.restoreForCancel(itemsToCancel);
+
+        // 8. payment 부분 취소: cancelAmount가 존재여부로 판단
+        paymentCommandService.cancelPayment(orderNumber, request.cancelReason(), cancelAmount);
+
     }
 }

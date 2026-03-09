@@ -1,9 +1,8 @@
 package com.teopteop.ecommerce.domain.product.service;
 
 import com.teopteop.ecommerce.domain.category.exception.CategoryErrorCode;
-import com.teopteop.ecommerce.domain.category.repository.CategoryJpaRepository;
-import com.teopteop.ecommerce.domain.inventory.entity.Inventory;
-import com.teopteop.ecommerce.domain.inventory.repository.InventoryJpaRepository;
+import com.teopteop.ecommerce.domain.category.service.CategoryQueryService;
+import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateRequest;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateResponse;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminUpdateRequest;
@@ -23,12 +22,14 @@ public class ProductCommandService {
 
     private final ProductJpaRepository productJpaRepository;
     private final ProductQueryRepository productQueryRepository;
-    private final InventoryJpaRepository inventoryJpaRepository;
-    private final CategoryJpaRepository categoryJpaRepository;
+
+    private final InventoryCommandService inventoryCommandService;
+
+    private final CategoryQueryService categoryQueryService;
 
     public ProductAdminCreateResponse registerProduct(ProductAdminCreateRequest request) {
         // 1. 카테고리 검증
-        if (!categoryJpaRepository.existsByIdAndDeletedFalse(request.categoryId())) {
+        if (!categoryQueryService.existByIdAndDeletedFalse(request.categoryId())) {
             throw new ApplicationException(CategoryErrorCode.CATEGORY_NOT_FOUND);
         }
 
@@ -37,8 +38,7 @@ public class ProductCommandService {
         Product savedProduct = productJpaRepository.save(product);
 
         // 3. 재고 생성
-        Inventory inventory = Inventory.create(savedProduct.getId(), request.stockQuantity());
-        inventoryJpaRepository.save(inventory);
+        inventoryCommandService.registerInventory(savedProduct.getId(), request.stockQuantity());
 
         return new ProductAdminCreateResponse(savedProduct.getId());
     }

@@ -33,4 +33,8 @@ public class CategoryQueryService {
         return foundCategories.map(CategoryResponse::fromEntity);
     }
 
+    public boolean existByIdAndDeletedFalse(Long id) {
+        return categoryJpaRepository.existsByIdAndDeletedFalse(id);
+    }
+
 }

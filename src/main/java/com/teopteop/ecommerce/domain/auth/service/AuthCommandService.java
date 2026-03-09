@@ -9,6 +9,8 @@ import com.teopteop.ecommerce.domain.auth.dto.SignUpResponse;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
+import com.teopteop.ecommerce.domain.member.service.MemberCommandService;
+import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
@@ -25,13 +27,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthCommandService {
 
-    private final MemberJpaRepository memberJpaRepository;
     private final UserJpaRepository userJpaRepository;
+
+    private final MemberCommandService memberCommandService;
+
+    private final MemberQueryService memberQueryService;
+
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public SignUpResponse registerUser(SignUpRequest request) {
-        if(memberJpaRepository.existsByEmail(request.email())) {
+        if(memberQueryService.existsByEmail(request.email())) {
             throw new ApplicationException(MemberErrorCode.EMAIL_DUPLICATE);
         }
 
@@ -50,7 +56,7 @@ public class AuthCommandService {
                 )
         );
 
-        Member savedMember = memberJpaRepository.save(member);
+        Member savedMember = memberCommandService.registerMember(member);
 
         User user = User.create(
                 request.username(),

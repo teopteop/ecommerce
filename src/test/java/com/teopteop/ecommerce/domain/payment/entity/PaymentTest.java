@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.*;
 
-@DisplayName("Payment 엔티티 테스트")
+@DisplayName("Payment 엔티티 상태전이 테스트")
 class PaymentTest {
 
     // 초기값 생성 메서드
@@ -19,8 +19,8 @@ class PaymentTest {
 
     // DONE 상태 payment 반환
     private Payment createDonePayment() {
-        Payment payment = createPayment(); // READY
-        payment.requestApproval(); // PENDING
+        Payment payment = createPayment(); // PENDING
+        payment.requestApproval(); // IN_PROGRESS
         payment.approve("key", PaymentMethod.CARD); //DONE
 
         return payment;
@@ -36,15 +36,15 @@ class PaymentTest {
     }
 
     @Test
-    @DisplayName("상태전이 확인 READY -> PENDING -> DONE")
+    @DisplayName("상태전이 확인 PENDING -> IN_PROGRESS -> DONE")
     void approveSuccess() {
         Payment payment = createPayment();
 
-        // READY -> PENDING 확인
+        // PENDING -> IN_PROGRESS 확인
         payment.requestApproval();
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.IN_PROGRESS);
 
-        // PENDING -> DONE 확인
+        // IN_PROGRESS -> DONE 확인
         payment.approve("key", PaymentMethod.CARD);
 
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.DONE);
@@ -54,9 +54,9 @@ class PaymentTest {
     }
 
     @Test
-    @DisplayName("READY 상태에서 approve 호출 시 예외")
+    @DisplayName("PENDING 상태에서 approve 호출 시 예외")
     void approveFailsWhenReady() {
-        Payment payment = createPayment(); // READY
+        Payment payment = createPayment(); // PENDING
 
         assertThatThrownBy(() -> payment.approve("key", PaymentMethod.CARD))
                 .isInstanceOfSatisfying(ApplicationException.class, ex -> {
@@ -78,7 +78,7 @@ class PaymentTest {
     }
 
     @Test
-    @DisplayName("READY 상태에서 cancel 호출 시 예외")
+    @DisplayName("PENDING 상태에서 cancel 호출 시 예외")
     void cancelFullyFailsWhenReady() {
         Payment payment = createPayment();
 
@@ -125,7 +125,7 @@ class PaymentTest {
     }
 
     @Test
-    @DisplayName("PENDING 상태에서 reject 성공 -> FAILED")
+    @DisplayName("IN_PROGRESS 상태에서 reject 성공 -> FAILED")
     void rejectSuccess() {
         Payment payment = createPayment();
         payment.requestApproval();
@@ -133,5 +133,17 @@ class PaymentTest {
         payment.reject();
 
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAILED);
+    }
+
+    @Test
+    @DisplayName("FAILED 상태에서 requestApproval 호출 시 -> IN_PROGRESS: 결제 재시도 확인")
+    void requestApprovalSuccessWhenFailed() {
+        Payment payment = createPayment();
+        payment.requestApproval(); // PENDING -> IN_PROGRESS
+        payment.reject();          // IN_PROGRESS -> FAILED
+
+        payment.requestApproval(); // FAILED -> IN_PROGRESS (재시도)
+
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.IN_PROGRESS);
     }
 }

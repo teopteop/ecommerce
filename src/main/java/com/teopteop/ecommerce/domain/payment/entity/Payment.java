@@ -30,6 +30,9 @@ public class Payment extends BaseTimeEntity {
     @Column(name = "payment_key", unique = true)
     private String paymentKey; // 토스 paymentKey
 
+    @Column(name = "webhook_secret")
+    private String webhookSecret; // 토스 가상계좌 webhook 전용 secret
+
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 0)
     private BigDecimal totalAmount;
 
@@ -41,7 +44,6 @@ public class Payment extends BaseTimeEntity {
     private PaymentStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private PaymentMethod method;
 
     @Column(name = "approved_at")
@@ -63,7 +65,7 @@ public class Payment extends BaseTimeEntity {
         this.orderNumber = orderNumber;
         this.totalAmount = totalAmount;
         this.canceledAmount = BigDecimal.ZERO;
-        this.status = PaymentStatus.READY;
+        this.status = PaymentStatus.PENDING;
     }
 
     public static Payment create(
@@ -77,16 +79,24 @@ public class Payment extends BaseTimeEntity {
     // === 상태 전이 메서드 ===
     // READY -> PENDING -> DONE or FAILED
     public void requestApproval() {
-        if (this.status != PaymentStatus.READY) {
+        if (this.status != PaymentStatus.PENDING && this.status != PaymentStatus.FAILED) {
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
-        this.status = PaymentStatus.PENDING;
+        this.status = PaymentStatus.IN_PROGRESS;
     }
 
     public void approve(String paymentKey, PaymentMethod method) {
-        if (this.status != PaymentStatus.PENDING) {
+        if (this.status != PaymentStatus.IN_PROGRESS) {
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        if (paymentKey == null || paymentKey.isBlank()) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+        }
+
+        if (method == null) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
         }
 
         this.paymentKey = paymentKey;
@@ -96,7 +106,7 @@ public class Payment extends BaseTimeEntity {
     }
 
     public void reject() {
-        if (this.status != PaymentStatus.PENDING) {
+        if (this.status != PaymentStatus.IN_PROGRESS) {
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -147,5 +157,48 @@ public class Payment extends BaseTimeEntity {
 
         this.canceledAt = LocalDateTime.now();
     }
+
+    // 가상계좌: secret과 가상계좌 발급, 클라이언트의 결제가 완료시 토스에서 웹훅 전송
+    public void waitingForDeposit(String paymentKey, PaymentMethod method, String secret) {
+        if (this.status != PaymentStatus.PENDING) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        if (paymentKey == null || paymentKey.isBlank()) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+        }
+
+        if (method != PaymentMethod.VIRTUAL_ACCOUNT) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+        }
+
+        if (secret == null || secret.isBlank()) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
+        }
+
+        this.paymentKey = paymentKey;
+        this.method = method;
+        this.status = PaymentStatus.WAITING_FOR_DEPOSIT;
+        this.webhookSecret = secret;
+    }
+
+    public void completeDeposit() {
+        if (this.status != PaymentStatus.WAITING_FOR_DEPOSIT) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = PaymentStatus.DONE;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    // 결제창 진입 후 유효시간 만료, 가상계좌 발급 후 기한 만료
+    public void expire() {
+        if (this.status != PaymentStatus.WAITING_FOR_DEPOSIT && this.status != PaymentStatus.PENDING) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = PaymentStatus.EXPIRED;
+    }
+
 
 }

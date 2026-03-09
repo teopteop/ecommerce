@@ -54,7 +54,7 @@ public class Delivery {
                 address.getStreet(),
                 address.getZipcode()
         );
-        this.status = DeliveryStatus.READY;
+        this.status = DeliveryStatus.PENDING;
     }
 
     public static Delivery create(
@@ -75,7 +75,7 @@ public class Delivery {
 
     // === 상태 전이 메서드 ===
     public void ship() {
-        if (this.status != DeliveryStatus.READY) {
+        if (this.status != DeliveryStatus.PENDING) {
            throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -98,7 +98,7 @@ public class Delivery {
      * @return 취소 가능 시 true, 불가하면 false
      */
     public boolean isCancelable(LocalDateTime cancelTime) {
-        if (this.status == DeliveryStatus.READY) {
+        if (this.status == DeliveryStatus.PENDING) {
             return true;
         }
 
