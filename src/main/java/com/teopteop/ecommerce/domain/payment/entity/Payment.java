@@ -79,7 +79,7 @@ public class Payment extends BaseTimeEntity {
     // === 상태 전이 메서드 ===
     // READY -> PENDING -> DONE or FAILED
     public void requestApproval() {
-        if (this.status != PaymentStatus.PENDING) {
+        if (this.status != PaymentStatus.PENDING && this.status != PaymentStatus.FAILED) {
             throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -191,6 +191,14 @@ public class Payment extends BaseTimeEntity {
         this.approvedAt = LocalDateTime.now();
     }
 
+    // 결제창 진입 후 유효시간 만료, 가상계좌 발급 후 기한 만료
+    public void expire() {
+        if (this.status != PaymentStatus.WAITING_FOR_DEPOSIT && this.status != PaymentStatus.PENDING) {
+            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.status = PaymentStatus.EXPIRED;
+    }
 
 
 }
