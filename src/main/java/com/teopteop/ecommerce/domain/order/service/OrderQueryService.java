@@ -1,10 +1,14 @@
 package com.teopteop.ecommerce.domain.order.service;
 
+import com.teopteop.ecommerce.domain.order.dto.OrderResponse;
 import com.teopteop.ecommerce.domain.order.entity.Order;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
 import com.teopteop.ecommerce.domain.order.repository.OrderJpaRepository;
+import com.teopteop.ecommerce.global.common.dto.PageResponse;
 import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,5 +22,22 @@ public class OrderQueryService {
     public Order findByOrderNumber(String orderNumber) {
         return orderJpaRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+    }
+
+    public OrderResponse findOrderDetail(Long orderId, Long memberId) {
+        Order foundOrder = orderJpaRepository.findDetailById(orderId)
+                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        if (!foundOrder.getMemberId().equals(memberId)) {
+            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+        }
+
+        return OrderResponse.ofDetail(foundOrder);
+    }
+
+    public PageResponse<OrderResponse> findMyOrders(Long memberId, Pageable pageable) {
+        Page<Order> foundOrders = orderJpaRepository.findByMemberId(memberId, pageable);
+
+        return PageResponse.from(foundOrders.map(OrderResponse::ofSummary));
     }
 }
