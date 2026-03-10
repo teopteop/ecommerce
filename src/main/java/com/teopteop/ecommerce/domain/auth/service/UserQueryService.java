@@ -1,9 +1,9 @@
 package com.teopteop.ecommerce.domain.auth.service;
 
 import com.teopteop.ecommerce.domain.auth.entity.User;
-import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
+import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
+import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,6 @@ public class UserQueryService {
 
     public User findActiveUserById(Long userId) {
         return userJpaRepository.findActiveUserById(userId)
-                .orElseThrow(() -> new ApplicationException(UserErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
     }
 }

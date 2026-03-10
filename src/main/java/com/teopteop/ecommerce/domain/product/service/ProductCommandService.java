@@ -1,6 +1,5 @@
 package com.teopteop.ecommerce.domain.product.service;
 
-import com.teopteop.ecommerce.domain.category.exception.CategoryErrorCode;
 import com.teopteop.ecommerce.domain.category.service.CategoryQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateRequest;
@@ -8,9 +7,9 @@ import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateResponse;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminUpdateRequest;
 import com.teopteop.ecommerce.domain.product.entity.Product;
 import com.teopteop.ecommerce.domain.product.exception.ProductErrorCode;
+import com.teopteop.ecommerce.domain.product.exception.ProductException;
 import com.teopteop.ecommerce.domain.product.repository.ProductJpaRepository;
 import com.teopteop.ecommerce.domain.product.repository.ProductQueryRepository;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +28,7 @@ public class ProductCommandService {
 
     public ProductAdminCreateResponse registerProduct(ProductAdminCreateRequest request) {
         // 1. 카테고리 검증
-        if (!categoryQueryService.existByIdAndDeletedFalse(request.categoryId())) {
-            throw new ApplicationException(CategoryErrorCode.CATEGORY_NOT_FOUND);
-        }
+        categoryQueryService.validateCategoryExists(request.categoryId());
 
         // 2. 상품 생성
         Product product = Product.create(request.name(), request.price(), request.categoryId());
@@ -45,20 +42,20 @@ public class ProductCommandService {
 
     public void markProductDeleted(Long id) {
         Product findProduct = productJpaRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         findProduct.markDeleted();
     }
 
     public void updateProduct(Long id, ProductAdminUpdateRequest request) {
         if (request.name() == null && request.price() == null && request.status() == null) {
-            throw new ApplicationException(ProductErrorCode.INVALID_UPDATE_REQUEST);
+            throw new ProductException(ProductErrorCode.INVALID_UPDATE_REQUEST);
         }
 
         long updateRows = productQueryRepository.updateProductDynamic(id, request);
 
         if (updateRows == 0) {
-            throw new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            throw new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
 
     }

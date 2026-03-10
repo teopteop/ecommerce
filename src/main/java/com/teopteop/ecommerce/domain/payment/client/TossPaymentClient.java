@@ -5,7 +5,7 @@ import com.teopteop.ecommerce.domain.payment.dto.TossConfirmRequest;
 import com.teopteop.ecommerce.domain.payment.dto.TossConfirmResponse;
 import com.teopteop.ecommerce.domain.payment.dto.TossPartialCancelRequest;
 import com.teopteop.ecommerce.domain.payment.exception.PaymentErrorCode;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.domain.payment.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ public class TossPaymentClient {
                 .onStatus(
                         HttpStatusCode::isError,
                         clientResponse -> Mono.error(
-                                new ApplicationException(PaymentErrorCode.PAYMENT_CONFIRM_FAILED)
+                                new PaymentException(PaymentErrorCode.PAYMENT_CONFIRM_FAILED)
                         )
                 ) // 에러 응답 -> 프로젝트 예외로 반환
                 .bodyToMono(TossConfirmResponse.class) // 정상 응답 DTO로 반환
@@ -43,7 +43,7 @@ public class TossPaymentClient {
                 .onStatus(
                         HttpStatusCode::isError,
                         clientResponse -> Mono.error(
-                                new ApplicationException(PaymentErrorCode.PAYMENT_CANCEL_FAILED)
+                                new PaymentException(PaymentErrorCode.PAYMENT_CANCEL_FAILED)
                         )
                 )
                 .bodyToMono(Void.class)
@@ -58,7 +58,7 @@ public class TossPaymentClient {
                 .onStatus(
                         HttpStatusCode::isError,
                         clientResponse -> Mono.error(
-                                new ApplicationException(PaymentErrorCode.PAYMENT_CANCEL_FAILED)
+                                new PaymentException(PaymentErrorCode.PAYMENT_CANCEL_FAILED)
                         )
                 )
                 .bodyToMono(Void.class)

@@ -4,9 +4,9 @@ import com.teopteop.ecommerce.domain.inventory.dto.InventoryStockRequest;
 import com.teopteop.ecommerce.domain.inventory.entity.Inventory;
 import com.teopteop.ecommerce.domain.inventory.entity.InventoryAdjustReason;
 import com.teopteop.ecommerce.domain.inventory.exception.InventoryErrorCode;
+import com.teopteop.ecommerce.domain.inventory.exception.InventoryException;
 import com.teopteop.ecommerce.domain.inventory.repository.InventoryJpaRepository;
 import com.teopteop.ecommerce.domain.order.entity.OrderItem;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,19 +24,19 @@ public class InventoryCommandService {
 
     private final InventoryJpaRepository inventoryJpaRepository;
 
-    public Inventory registerInventory(Long productId, int stockQuantity) {
+    public void registerInventory(Long productId, int stockQuantity) {
         Inventory inventory = Inventory.create(productId, stockQuantity);
-        return inventoryJpaRepository.save(inventory);
+        inventoryJpaRepository.save(inventory);
     }
 
     // 관리자 재고 입고
     public void restock(Long id, InventoryStockRequest request) {
         if (request.reason() != InventoryAdjustReason.RESTOCK) {
-            throw new ApplicationException(InventoryErrorCode.INVALID_ADJUST_REASON);
+            throw new InventoryException(InventoryErrorCode.INVALID_ADJUST_REASON);
         }
 
         Inventory foundInventory = inventoryJpaRepository.findById(id)
-                .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+                .orElseThrow(() -> new InventoryException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
         foundInventory.increase(request.amount());
         foundInventory.addHistory(request.amount(), request.reason());
@@ -56,7 +56,7 @@ public class InventoryCommandService {
                 .findByProductIdsWithLock(productIds);
 
         if (foundInventories.size() != productIds.size()) {
-            throw new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND);
+            throw new InventoryException(InventoryErrorCode.INVENTORY_NOT_FOUND);
         }
 
         Map<Long, Integer> quantities = items.stream()
@@ -81,11 +81,11 @@ public class InventoryCommandService {
      */
     public void deductByAdmin(Long id, InventoryStockRequest request) {
         if (request.reason() != InventoryAdjustReason.ADMIN_DEDUCT) {
-            throw new ApplicationException(InventoryErrorCode.INVALID_ADJUST_REASON);
+            throw new InventoryException(InventoryErrorCode.INVALID_ADJUST_REASON);
         }
 
         Inventory foundInventory = inventoryJpaRepository.findById(id)
-                .orElseThrow(() -> new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+                .orElseThrow(() -> new InventoryException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
         foundInventory.decrease(request.amount());
         foundInventory.addHistory(request.amount(), request.reason());
@@ -104,7 +104,7 @@ public class InventoryCommandService {
 
         // 재고 없는 상품, 등록 안된 상품이 있는지 확인
         if (foundInventories.size() != productIds.size()) {
-            throw new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND);
+            throw new InventoryException(InventoryErrorCode.INVENTORY_NOT_FOUND);
         }
 
         for (Inventory inventory : foundInventories) {

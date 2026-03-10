@@ -1,21 +1,18 @@
 package com.teopteop.ecommerce.domain.auth.service;
 
-import com.teopteop.ecommerce.domain.auth.entity.User;
-import com.teopteop.ecommerce.domain.auth.entity.UserRole;
 import com.teopteop.ecommerce.domain.auth.dto.LoginRequest;
 import com.teopteop.ecommerce.domain.auth.dto.LoginResponse;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpRequest;
 import com.teopteop.ecommerce.domain.auth.dto.SignUpResponse;
+import com.teopteop.ecommerce.domain.auth.entity.User;
+import com.teopteop.ecommerce.domain.auth.entity.UserRole;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
-import com.teopteop.ecommerce.domain.auth.exception.UserErrorCode;
+import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
+import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.domain.member.service.MemberCommandService;
 import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
-import com.teopteop.ecommerce.domain.member.entity.Member;
-import com.teopteop.ecommerce.domain.member.exception.MemberErrorCode;
-import com.teopteop.ecommerce.domain.member.repository.MemberJpaRepository;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import com.teopteop.ecommerce.global.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,12 +34,10 @@ public class AuthCommandService {
     private final JwtUtil jwtUtil;
 
     public SignUpResponse registerUser(SignUpRequest request) {
-        if(memberQueryService.existsByEmail(request.email())) {
-            throw new ApplicationException(MemberErrorCode.EMAIL_DUPLICATE);
-        }
+        memberQueryService.validateEmailNotDuplicate(request.email());
 
         if(userJpaRepository.existsByUsername(request.username())) {
-            throw new ApplicationException(UserErrorCode.USERNAME_DUPLICATE);
+            throw new AuthException(AuthErrorCode.USERNAME_DUPLICATE);
         }
 
         Member member = Member.create(
@@ -74,10 +69,10 @@ public class AuthCommandService {
     @Transactional(readOnly = true)
     public LoginResponse authenticate(LoginRequest request) {
         User findUser = userJpaRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_CREDENTIALS));
 
         if(!passwordEncoder.matches(request.password(), findUser.getPassword())) {
-            throw new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS);
+            throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         String accessToken = jwtUtil.createAccessToken(findUser.getId(), findUser.getMemberId(), findUser.getRole());

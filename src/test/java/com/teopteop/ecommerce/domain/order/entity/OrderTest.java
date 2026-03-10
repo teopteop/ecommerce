@@ -1,8 +1,8 @@
 package com.teopteop.ecommerce.domain.order.entity;
 
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.global.common.vo.Address;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +59,7 @@ public class OrderTest {
         Order paidOrder = createPaidOrder();
 
         assertThatThrownBy(paidOrder::markPaid)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
@@ -70,7 +70,7 @@ public class OrderTest {
         order.cancel();
 
         assertThatThrownBy(order::markPaid)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
@@ -101,7 +101,7 @@ public class OrderTest {
         Order paidOrder = createPaidOrder();
 
         assertThatThrownBy(paidOrder::markPaymentFailed)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
@@ -123,7 +123,7 @@ public class OrderTest {
         paidOrder.cancel();
 
         assertThatThrownBy(paidOrder::cancel)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
@@ -134,7 +134,7 @@ public class OrderTest {
         paidOrder.startShipping();
 
         assertThatThrownBy(paidOrder::cancel)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
@@ -155,7 +155,7 @@ public class OrderTest {
         paidOrder.startShipping();
 
         assertThatThrownBy(paidOrder::partialCancel)
-                .isInstanceOfSatisfying(ApplicationException.class, ex ->
+                .isInstanceOfSatisfying(OrderException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 

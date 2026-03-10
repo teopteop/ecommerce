@@ -1,9 +1,8 @@
 package com.teopteop.ecommerce.domain.order.entity;
 
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.domain.order.exception.OrderItemErrorCode;
-import com.teopteop.ecommerce.domain.product.entity.Product;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -66,7 +65,7 @@ public class OrderItem extends BaseTimeEntity {
 
     public void cancel() {
         if (this.status == OrderItemStatus.CANCELED) {
-            throw new ApplicationException(OrderItemErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderItemErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderItemStatus.CANCELED;

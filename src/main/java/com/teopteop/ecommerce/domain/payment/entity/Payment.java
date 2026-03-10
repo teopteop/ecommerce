@@ -1,8 +1,8 @@
 package com.teopteop.ecommerce.domain.payment.entity;
 
 import com.teopteop.ecommerce.domain.payment.exception.PaymentErrorCode;
+import com.teopteop.ecommerce.domain.payment.exception.PaymentException;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public class Payment extends BaseTimeEntity {
             BigDecimal totalAmount
     ) {
         if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
+            throw new PaymentException(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
         }
 
         this.orderId = orderId;
@@ -80,7 +80,7 @@ public class Payment extends BaseTimeEntity {
     // READY -> PENDING -> DONE or FAILED
     public void requestApproval() {
         if (this.status != PaymentStatus.PENDING && this.status != PaymentStatus.FAILED) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = PaymentStatus.IN_PROGRESS;
@@ -88,15 +88,15 @@ public class Payment extends BaseTimeEntity {
 
     public void approve(String paymentKey, PaymentMethod method) {
         if (this.status != PaymentStatus.IN_PROGRESS) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         if (paymentKey == null || paymentKey.isBlank()) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_KEY);
         }
 
         if (method == null) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
         }
 
         this.paymentKey = paymentKey;
@@ -107,7 +107,7 @@ public class Payment extends BaseTimeEntity {
 
     public void reject() {
         if (this.status != PaymentStatus.IN_PROGRESS) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = PaymentStatus.FAILED;
@@ -116,7 +116,7 @@ public class Payment extends BaseTimeEntity {
     public void cancelFully() {
         if (this.status != PaymentStatus.DONE
                 && this.status != PaymentStatus.PARTIAL_CANCELED) { // 부분 취소 상태에서도 전체 취소 가능
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.canceledAmount = this.totalAmount;
@@ -127,18 +127,18 @@ public class Payment extends BaseTimeEntity {
     public void cancelPartially(BigDecimal amount) {
         if (this.status != PaymentStatus.DONE
                 && this.status != PaymentStatus.PARTIAL_CANCELED) { // 부분 취소 상태에서도 추가로 취소 가능
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_CANCEL_AMOUNT);
+            throw new PaymentException(PaymentErrorCode.INVALID_CANCEL_AMOUNT);
         }
 
         // 남은 금액 = 총 금액 - 누적 취소 금액
         BigDecimal remaining = this.totalAmount.subtract(this.canceledAmount);
 
         if (remaining.compareTo(amount) < 0) {
-            throw new ApplicationException(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
+            throw new PaymentException(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
         }
 
         // 취소 금액 += 입력값(취소된 OrderItem.orderPrice)
@@ -161,19 +161,19 @@ public class Payment extends BaseTimeEntity {
     // 가상계좌: secret과 가상계좌 발급, 클라이언트의 결제가 완료시 토스에서 웹훅 전송
     public void waitingForDeposit(String paymentKey, PaymentMethod method, String secret) {
         if (this.status != PaymentStatus.PENDING) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         if (paymentKey == null || paymentKey.isBlank()) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_KEY);
         }
 
         if (method != PaymentMethod.VIRTUAL_ACCOUNT) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
         }
 
         if (secret == null || secret.isBlank()) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
+            throw new PaymentException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
         }
 
         this.paymentKey = paymentKey;
@@ -184,7 +184,7 @@ public class Payment extends BaseTimeEntity {
 
     public void completeDeposit() {
         if (this.status != PaymentStatus.WAITING_FOR_DEPOSIT) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = PaymentStatus.DONE;
@@ -194,7 +194,7 @@ public class Payment extends BaseTimeEntity {
     // 결제창 진입 후 유효시간 만료, 가상계좌 발급 후 기한 만료
     public void expire() {
         if (this.status != PaymentStatus.WAITING_FOR_DEPOSIT && this.status != PaymentStatus.PENDING) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
+            throw new PaymentException(PaymentErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = PaymentStatus.EXPIRED;

@@ -1,8 +1,8 @@
 package com.teopteop.ecommerce.domain.order.entity;
 
 import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.global.common.vo.Address;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -80,7 +80,7 @@ public class Delivery {
     // === 상태 전이 메서드 ===
     public void ship() {
         if (this.status != DeliveryStatus.PENDING) {
-           throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+           throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = DeliveryStatus.SHIPPED;
@@ -89,7 +89,7 @@ public class Delivery {
 
     public void complete() {
         if (this.status != DeliveryStatus.SHIPPED) {
-            throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = DeliveryStatus.DELIVERED;

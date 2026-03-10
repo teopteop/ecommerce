@@ -6,15 +6,18 @@ import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
 import com.teopteop.ecommerce.domain.order.dto.*;
-import com.teopteop.ecommerce.domain.order.entity.*;
+import com.teopteop.ecommerce.domain.order.entity.Delivery;
+import com.teopteop.ecommerce.domain.order.entity.Order;
+import com.teopteop.ecommerce.domain.order.entity.OrderItem;
+import com.teopteop.ecommerce.domain.order.entity.OrderItemStatus;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.domain.order.exception.OrderItemErrorCode;
 import com.teopteop.ecommerce.domain.order.repository.OrderJpaRepository;
 import com.teopteop.ecommerce.domain.payment.service.PaymentCommandService;
 import com.teopteop.ecommerce.domain.product.entity.Product;
 import com.teopteop.ecommerce.domain.product.service.ProductQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -99,15 +102,15 @@ public class OrderCommandService {
 
         // 1. Order 조회
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
-                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
         if (!foundOrder.getMemberId().equals(memberId)) {
-            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+            throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
         if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         // 3. Order 상태 전이
@@ -128,15 +131,15 @@ public class OrderCommandService {
 
         // 1. Order 조회
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
-                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
         if (!foundOrder.getMemberId().equals(memberId)) {
-            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+            throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
         if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         // 3. 취소할 아이템 필터링
@@ -145,7 +148,7 @@ public class OrderCommandService {
                 .toList();
 
         if (itemsToCancel.isEmpty()) {
-            throw new ApplicationException(OrderItemErrorCode.ORDER_ITEM_NOT_FOUND);
+            throw new OrderException(OrderItemErrorCode.ORDER_ITEM_NOT_FOUND);
         }
 
         // 4. 아이템 취소

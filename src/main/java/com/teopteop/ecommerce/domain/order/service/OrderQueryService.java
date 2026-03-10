@@ -3,9 +3,9 @@ package com.teopteop.ecommerce.domain.order.service;
 import com.teopteop.ecommerce.domain.order.dto.OrderResponse;
 import com.teopteop.ecommerce.domain.order.entity.Order;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.domain.order.repository.OrderJpaRepository;
 import com.teopteop.ecommerce.global.common.dto.PageResponse;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,15 +25,15 @@ public class OrderQueryService {
      */
     public Order findById(Long id) {
         return orderJpaRepository.findById(id)
-                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
     public OrderResponse findOrderDetail(Long orderId, Long memberId) {
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(orderId)
-                .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!foundOrder.getMemberId().equals(memberId)) {
-            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+            throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
         return OrderResponse.ofDetail(foundOrder);

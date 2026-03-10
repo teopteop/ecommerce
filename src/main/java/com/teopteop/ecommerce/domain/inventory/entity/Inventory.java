@@ -1,8 +1,8 @@
 package com.teopteop.ecommerce.domain.inventory.entity;
 
 import com.teopteop.ecommerce.domain.inventory.exception.InventoryErrorCode;
+import com.teopteop.ecommerce.domain.inventory.exception.InventoryException;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,11 +33,11 @@ public class Inventory extends BaseTimeEntity {
 
     private Inventory(Long productId, int quantity) {
         if (productId == null) {
-            throw new ApplicationException(InventoryErrorCode.INVALID_PRODUCT_ID);
+            throw new InventoryException(InventoryErrorCode.INVALID_PRODUCT_ID);
         }
 
         if (quantity < 0 ) {
-            throw new ApplicationException(InventoryErrorCode.STOCK_QUANTITY_POSITIVE);
+            throw new InventoryException(InventoryErrorCode.STOCK_QUANTITY_POSITIVE);
         }
 
         this.productId = productId;
@@ -50,7 +50,7 @@ public class Inventory extends BaseTimeEntity {
 
     public void increase(int quantity) {
         if (quantity <= 0) {
-            throw new ApplicationException(InventoryErrorCode.INVALID_INVENTORY_QUANTITY);
+            throw new InventoryException(InventoryErrorCode.INVALID_INVENTORY_QUANTITY);
         }
 
         this.quantity += quantity;
@@ -58,11 +58,11 @@ public class Inventory extends BaseTimeEntity {
 
     public void decrease(int quantity) {
         if (quantity <= 0) {
-            throw new ApplicationException(InventoryErrorCode.INVALID_INVENTORY_QUANTITY);
+            throw new InventoryException(InventoryErrorCode.INVALID_INVENTORY_QUANTITY);
         }
 
         if (this.quantity < quantity) {
-            throw new ApplicationException(InventoryErrorCode.OUT_OF_STOCK);
+            throw new InventoryException(InventoryErrorCode.OUT_OF_STOCK);
         }
 
         this.quantity -= quantity;
