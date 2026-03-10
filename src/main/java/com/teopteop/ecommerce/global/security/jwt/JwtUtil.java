@@ -54,13 +54,14 @@ public class JwtUtil {
      * @param userRole 유저 권한(Role)
      * @return 서명된 JWT 액세스 토큰
      */
-    public String createAccessToken(Long userId, UserRole userRole) {
+    public String createAccessToken(Long userId, Long memberId, UserRole userRole) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidity);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))            // JWT Subject = userId
-                .claim("role", userRole.name())             // Custom Claim에 Role 추가
+                .claim("role", userRole.name())              // Custom Claim에 Role 추가
+                .claim("memberId", memberId)                 // Custom Claim에 memberId 추가
                 .setIssuedAt(now)                              // 발급시간
                 .setExpiration(expiryDate)                     // 만료시간
                 .signWith(secretKey, SignatureAlgorithm.HS256) // HS256 서명
@@ -117,14 +118,19 @@ public class JwtUtil {
      */
     public Authentication getAuthentication(String token) {
         Long userId = getUserId(token);
+        Long memberId = getMemberId(token);
         UserRole role = getUserRole(token);
 
-        UserPrincipal principal = new UserPrincipal(userId, String.valueOf(userId), "", role);
+        UserPrincipal principal = new UserPrincipal(userId, memberId, String.valueOf(userId), "", role);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
     public long getUserId(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
+    }
+
+    public long getMemberId(String token) {
+        return parseClaims(token).get("memberId", Long.class);
     }
 
     public UserRole getUserRole(String token) {

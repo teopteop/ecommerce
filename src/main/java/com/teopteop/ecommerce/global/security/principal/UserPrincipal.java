@@ -14,12 +14,20 @@ import java.util.List;
 public class UserPrincipal implements UserDetails {
 
     private final Long id;
+    private final Long memberId;
     private final String username;
     @Nullable private final String password;
     private final UserRole role;
 
-    public UserPrincipal(Long id, String username, @Nullable String password, UserRole role) {
+    public UserPrincipal(
+            Long id,
+            Long memberId,
+            String username,
+            @Nullable String password,
+            UserRole role
+    ) {
         this.id = id;
+        this.memberId = memberId;
         this.username = username;
         this.password = password;
         this.role = role;

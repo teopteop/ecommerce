@@ -80,7 +80,7 @@ public class AuthCommandService {
             throw new ApplicationException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
-        String accessToken = jwtUtil.createAccessToken(findUser.getId(), findUser.getRole());
+        String accessToken = jwtUtil.createAccessToken(findUser.getId(), findUser.getMemberId(), findUser.getRole());
 
         return new LoginResponse(accessToken);
     }
