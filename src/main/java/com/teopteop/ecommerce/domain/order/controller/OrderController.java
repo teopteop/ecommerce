@@ -33,21 +33,23 @@ public class OrderController {
                 .body(ApiResponse.success(orderCommandService.registerOrder(principal.getId(), request)));
     }
 
-    @PostMapping("/cancel/{orderNumber}")
+    @PostMapping("/cancel/{id}")
     public ResponseEntity<ApiResponse<Void>> cancelOrder(
-            @PathVariable String orderNumber,
-            @Valid @RequestBody OrderCancelRequest request
+            @PathVariable Long id,
+            @Valid @RequestBody OrderCancelRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        orderCommandService.cancelOrder(orderNumber, request);
+        orderCommandService.cancelOrder(id, principal.getMemberId(), request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @PostMapping("/partial-cancel/{orderNumber}")
+    @PostMapping("/partial-cancel/{id}")
     public ResponseEntity<ApiResponse<Void>> partialCancelOrder(
-            @PathVariable String orderNumber,
-            @Valid @RequestBody OrderPartialCancelRequest request
+            @PathVariable Long id,
+            @Valid @RequestBody OrderPartialCancelRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-       orderCommandService.partialCancelOrder(orderNumber, request);
+       orderCommandService.partialCancelOrder(id, principal.getMemberId(), request);
        return ResponseEntity.ok(ApiResponse.success(null));
     }
 

@@ -90,18 +90,22 @@ public class OrderCommandService {
         Order savedOrder = orderJpaRepository.save(order);
 
         // 10. Payment 저장 메서드 호출
-        paymentCommandService.createPayment(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getTotalPrice());
+        paymentCommandService.registerPayment(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getTotalPrice());
 
         return new OrderCreateResponse(savedOrder.getId(), savedOrder.getOrderNumber());
     }
 
-    public void cancelOrder(String orderNumber, OrderCancelRequest request) {
+    public void cancelOrder(Long id, Long memberId, OrderCancelRequest request) {
 
         // 1. Order 조회
-        Order foundOrder = orderJpaRepository.findByOrderNumber(orderNumber)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
                 .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 취소 가능 여부 확인
+        // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
+        if (!foundOrder.getMemberId().equals(memberId)) {
+            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+        }
+
         if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
@@ -117,16 +121,20 @@ public class OrderCommandService {
         inventoryCommandService.restoreForCancel(items);
 
         // 6. Payment 전액 취소
-        paymentCommandService.cancelPayment(orderNumber, request.cancelReason(), null);
+        paymentCommandService.cancelPayment(foundOrder.getOrderNumber(), request.cancelReason(), null);
     }
 
-    public void partialCancelOrder(String orderNumber, OrderPartialCancelRequest request) {
+    public void partialCancelOrder(Long id, Long memberId, OrderPartialCancelRequest request) {
 
         // 1. Order 조회
-        Order foundOrder = orderJpaRepository.findByOrderNumber(orderNumber)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
                 .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 취소 가능 여부 확인
+        // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
+        if (!foundOrder.getMemberId().equals(memberId)) {
+            throw new ApplicationException(OrderErrorCode.ORDER_FORBIDDEN);
+        }
+
         if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
             throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
@@ -162,7 +170,6 @@ public class OrderCommandService {
         inventoryCommandService.restoreForCancel(itemsToCancel);
 
         // 8. payment 부분 취소: cancelAmount가 존재여부로 판단
-        paymentCommandService.cancelPayment(orderNumber, request.cancelReason(), cancelAmount);
-
+        paymentCommandService.cancelPayment(foundOrder.getOrderNumber(), request.cancelReason(), cancelAmount);
     }
 }

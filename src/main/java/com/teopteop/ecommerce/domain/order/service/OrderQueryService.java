@@ -19,13 +19,17 @@ public class OrderQueryService {
 
     private final OrderJpaRepository orderJpaRepository;
 
-    public Order findByOrderNumber(String orderNumber) {
-        return orderJpaRepository.findByOrderNumber(orderNumber)
+    /**
+     * 타 도메인(Payment 등)에서 상태 전이 목적으로 사용
+     * items, delivery 조회가 필요한 경우 fetch join 메서드를 사용할 것
+     */
+    public Order findById(Long id) {
+        return orderJpaRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
     public OrderResponse findOrderDetail(Long orderId, Long memberId) {
-        Order foundOrder = orderJpaRepository.findDetailById(orderId)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(orderId)
                 .orElseThrow(() -> new ApplicationException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!foundOrder.getMemberId().equals(memberId)) {
@@ -36,7 +40,7 @@ public class OrderQueryService {
     }
 
     public PageResponse<OrderResponse> findMyOrders(Long memberId, Pageable pageable) {
-        Page<Order> foundOrders = orderJpaRepository.findByMemberId(memberId, pageable);
+        Page<Order> foundOrders = orderJpaRepository.findOrdersByMemberId(memberId, pageable);
 
         return PageResponse.from(foundOrders.map(OrderResponse::ofSummary));
     }
