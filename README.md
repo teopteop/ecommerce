@@ -9,7 +9,7 @@ Spring Boot 기반의 이커머스 백엔드 프로젝트입니다.
 
 | 분류 | 기술 |
 |------|------|
-| Language | Java 21 |
+| Language | Java 17 |
 | Framework | Spring Boot 4.0 |
 | Security | Spring Security + JWT |
 | ORM | Spring Data JPA + QueryDSL |
