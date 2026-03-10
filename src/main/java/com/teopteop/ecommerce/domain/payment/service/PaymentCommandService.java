@@ -3,14 +3,14 @@ package com.teopteop.ecommerce.domain.payment.service;
 import com.teopteop.ecommerce.domain.order.entity.Order;
 import com.teopteop.ecommerce.domain.order.entity.OrderCancelReason;
 import com.teopteop.ecommerce.domain.order.service.OrderQueryService;
-import com.teopteop.ecommerce.domain.payment.entity.PaymentStatus;
-import com.teopteop.ecommerce.domain.payment.repository.PaymentJpaRepository;
 import com.teopteop.ecommerce.domain.payment.client.TossPaymentClient;
 import com.teopteop.ecommerce.domain.payment.dto.*;
 import com.teopteop.ecommerce.domain.payment.entity.Payment;
 import com.teopteop.ecommerce.domain.payment.entity.PaymentMethod;
+import com.teopteop.ecommerce.domain.payment.entity.PaymentStatus;
 import com.teopteop.ecommerce.domain.payment.exception.PaymentErrorCode;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.domain.payment.exception.PaymentException;
+import com.teopteop.ecommerce.domain.payment.repository.PaymentJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,12 +38,12 @@ public class PaymentCommandService {
     public PaymentConfirmResponse confirm(PaymentConfirmRequest request) {
         // 1. Payment 조회 (비관락)
         Payment foundPayment = paymentJpaRepository.findByOrderNumberForUpdate(request.orderNumber())
-                .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         // 2. 금액 검증 (위변조 방지)
         // 클라이언트가 amount를 조작해서 넘길 수 있기 때문에 DB 금액과 반드시 비교할 것
         if (foundPayment.getTotalAmount().compareTo(request.amount()) != 0) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
+            throw new PaymentException(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
         }
 
         // 3. PENDING -> IN_PROGRESS
@@ -98,7 +98,7 @@ public class PaymentCommandService {
     public void cancelPayment(String orderNumber, OrderCancelReason cancelReason, BigDecimal cancelAmount) {
         // 1. orderNumber로 Payment 조회 (비관락)
         Payment foundPayment = paymentJpaRepository.findByOrderNumberForUpdate(orderNumber)
-                .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         // 2. 전액, 부분 취소 분기: 토스 API 호출 -> DB 상태 전이
         if (cancelAmount == null) {
@@ -116,7 +116,7 @@ public class PaymentCommandService {
         TossPaymentData data = request.data();
 
         Payment foundPayment = paymentJpaRepository.findByOrderNumber(data.orderId())
-                .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         // 멱등성 처리: 상태값 확인 후 상태전이가 이미 진행되었다면 수신된 웹훅은 무시한다.
         switch (data.status()) {
@@ -175,14 +175,15 @@ public class PaymentCommandService {
     // 가상결제 완료
     public void handleDepositCallback(TossDepositCallbackRequest request) {
         Payment foundPayment = paymentJpaRepository.findByOrderNumber(request.orderId())
-                .orElseThrow(() -> new ApplicationException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         // secret 검증
         if (!foundPayment.getWebhookSecret().equals(request.secret())) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
+            throw new PaymentException(PaymentErrorCode.INVALID_WEBHOOK_SECRET);
         }
 
         foundPayment.completeDeposit();
+
         Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
         foundOrder.markPaid();
     }

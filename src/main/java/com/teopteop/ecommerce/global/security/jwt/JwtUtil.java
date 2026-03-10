@@ -2,7 +2,6 @@ package com.teopteop.ecommerce.global.security.jwt;
 
 import com.teopteop.ecommerce.domain.auth.entity.UserRole;
 import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -10,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -41,7 +39,7 @@ public class JwtUtil {
         byte[] decodedKey = Base64.getDecoder().decode(secret);
         if(decodedKey.length < 32) {
             log.error("JWT Secret Key 설정 오류: 환경변수 값이 잘못되었거나 길이가 짧습니다.");
-            throw new ApplicationException(JwtErrorCode.SECRET_KEY_INVALID);
+            throw new JwtException(JwtErrorCode.SECRET_KEY_INVALID);
         }
         this.secretKey = Keys.hmacShaKeyFor(decodedKey);
         this.accessTokenValidity = accessTokenValidity;

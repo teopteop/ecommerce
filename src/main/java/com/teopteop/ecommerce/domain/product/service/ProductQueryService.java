@@ -5,10 +5,9 @@ import com.teopteop.ecommerce.domain.product.dto.ProductResponse;
 import com.teopteop.ecommerce.domain.product.entity.Product;
 import com.teopteop.ecommerce.domain.product.entity.ProductStatus;
 import com.teopteop.ecommerce.domain.product.exception.ProductErrorCode;
+import com.teopteop.ecommerce.domain.product.exception.ProductException;
 import com.teopteop.ecommerce.domain.product.repository.ProductJpaRepository;
 import com.teopteop.ecommerce.domain.product.repository.ProductQueryRepository;
-import com.teopteop.ecommerce.global.common.dto.PageResponse;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,7 @@ public class ProductQueryService {
 
     public ProductResponse findProduct(Long id) {
         return ProductResponse.fromEntity(productJpaRepository.findByIdAndDeletedFalseAndStatus(id, ProductStatus.SELLING)
-                .orElseThrow(() -> new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND)));
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND)));
     }
 
     public Page<ProductResponse> findProducts(Pageable pageable) {
@@ -38,7 +37,7 @@ public class ProductQueryService {
 
     public ProductAdminResponse findProductWithDeleted(Long id) {
         return productQueryRepository.findProductByAdmin(id)
-                .orElseThrow(() -> new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     public Page<ProductAdminResponse> findProductsWithDeleted(Pageable pageable) {
@@ -50,7 +49,7 @@ public class ProductQueryService {
                 .findByIdInAndDeletedFalseAndStatus(productIds, ProductStatus.SELLING);
 
         if (productIds.size() != foundProducts.size()) {
-            throw new ApplicationException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            throw new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
 
         return foundProducts;

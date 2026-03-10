@@ -1,13 +1,14 @@
 package com.teopteop.ecommerce.domain.payment.entity;
 
 import com.teopteop.ecommerce.domain.payment.exception.PaymentErrorCode;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.domain.payment.exception.PaymentException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Payment 엔티티 상태전이 테스트")
 class PaymentTest {
@@ -30,7 +31,7 @@ class PaymentTest {
     @DisplayName("총 금액이 0 이하이면 예외")
     void invalidAmount() throws Exception {
         assertThatThrownBy(() -> Payment.create(1L, "ORDER-1", BigDecimal.ZERO))
-                .isInstanceOfSatisfying(ApplicationException.class, ex -> {
+                .isInstanceOfSatisfying(PaymentException.class, ex -> {
                     assertThat(ex.getErrorCode()).isEqualTo(PaymentErrorCode.INVALID_TOTAL_AMOUNT);
                 });
     }
@@ -59,7 +60,7 @@ class PaymentTest {
         Payment payment = createPayment(); // PENDING
 
         assertThatThrownBy(() -> payment.approve("key", PaymentMethod.CARD))
-                .isInstanceOfSatisfying(ApplicationException.class, ex -> {
+                .isInstanceOfSatisfying(PaymentException.class, ex -> {
                     assertThat(ex.getErrorCode())
                             .isEqualTo(PaymentErrorCode.INVALID_STATUS_TRANSITION);
                 });
@@ -71,7 +72,7 @@ class PaymentTest {
         Payment payment = createDonePayment();
 
         assertThatThrownBy(payment::requestApproval)
-                .isInstanceOfSatisfying(ApplicationException.class, ex -> {
+                .isInstanceOfSatisfying(PaymentException.class, ex -> {
                     assertThat(ex.getErrorCode())
                             .isEqualTo(PaymentErrorCode.INVALID_STATUS_TRANSITION);
                 });
@@ -83,7 +84,7 @@ class PaymentTest {
         Payment payment = createPayment();
 
         assertThatThrownBy(payment::cancelFully)
-                .isInstanceOfSatisfying(ApplicationException.class, ex -> {
+                .isInstanceOfSatisfying(PaymentException.class, ex -> {
                     assertThat(ex.getErrorCode())
                             .isEqualTo(PaymentErrorCode.INVALID_STATUS_TRANSITION);
                 });
@@ -118,7 +119,7 @@ class PaymentTest {
         Payment payment = createDonePayment();
 
         assertThatThrownBy(() -> payment.cancelPartially(BigDecimal.valueOf(20000)))
-                .isInstanceOfSatisfying(ApplicationException.class, ex -> {
+                .isInstanceOfSatisfying(PaymentException.class, ex -> {
                     assertThat(ex.getErrorCode())
                             .isEqualTo(PaymentErrorCode.CANCEL_AMOUNT_EXCEEDED);
                 });

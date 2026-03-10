@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /**
-     * ApplicationException 처리
+     * BaseException 처리
      * - 사용자 정의 예외 처리
      * - BaseErrorCode에 정의된 상태코드와 메세지를 기반으로 Response 반환
      */
-    @ExceptionHandler(ApplicationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBaseException(ApplicationException e) {
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {
         BaseErrorCode errorCode = e.getErrorCode();
 
         log.warn("요청 처리 실패: status={}, message={}", errorCode.getStatus(), errorCode.getMessage());

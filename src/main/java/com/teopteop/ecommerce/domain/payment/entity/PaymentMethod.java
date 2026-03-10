@@ -1,7 +1,7 @@
 package com.teopteop.ecommerce.domain.payment.entity;
 
 import com.teopteop.ecommerce.domain.payment.exception.PaymentErrorCode;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
+import com.teopteop.ecommerce.domain.payment.exception.PaymentException;
 
 public enum PaymentMethod {
     CARD,                   // 카드
@@ -15,7 +15,7 @@ public enum PaymentMethod {
 
     public static PaymentMethod from(String tossMethod) {
         if (tossMethod == null) {
-            throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
         }
 
         return switch (tossMethod) {
@@ -27,7 +27,7 @@ public enum PaymentMethod {
             case "문화상품권" -> GIFT_CERTIFICATE;
             case "도서문화상품권" -> BOOK_GIFT_CERTIFICATE;
             case "게임문화상품권" -> GAME_GIFT_CERTIFICATE;
-            default -> throw new ApplicationException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+            default -> throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
         };
     }
 }

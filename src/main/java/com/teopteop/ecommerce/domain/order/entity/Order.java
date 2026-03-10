@@ -2,8 +2,8 @@ package com.teopteop.ecommerce.domain.order.entity;
 
 import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
+import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
-import com.teopteop.ecommerce.global.exception.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -72,7 +72,7 @@ public class Order extends BaseTimeEntity {
     // === 상태전이 메서드 ===
     public void cancel() {
         if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderStatus.CANCELED;
@@ -80,7 +80,7 @@ public class Order extends BaseTimeEntity {
 
     public void partialCancel()  {
         if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderStatus.PARTIAL_CANCELED;
@@ -89,7 +89,7 @@ public class Order extends BaseTimeEntity {
     // Payment -> Order 상태 전이
     public void markPaid() {
         if (this.status != OrderStatus.PENDING && this.status != OrderStatus.PAYMENT_FAILED) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderStatus.PAID;
@@ -98,7 +98,7 @@ public class Order extends BaseTimeEntity {
     public void markPaymentFailed() {
         if (this.status == OrderStatus.PAYMENT_FAILED) return; // 멱등성 처리
         if (this.status != OrderStatus.PENDING) {
-            throw new ApplicationException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderStatus.PAYMENT_FAILED;
@@ -107,7 +107,7 @@ public class Order extends BaseTimeEntity {
     // Delivery 상태 전이 위임
     public void startShipping() {
         if (this.status != OrderStatus.PAID) {
-            throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.delivery.ship();
@@ -116,7 +116,7 @@ public class Order extends BaseTimeEntity {
 
     public void completeDelivery() {
         if (this.status != OrderStatus.SHIPPED) {
-            throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.delivery.complete();
