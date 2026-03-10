@@ -30,7 +30,7 @@ public class PaymentCommandService {
 
     private final TossPaymentClient tossPaymentClient;
 
-    public void createPayment(Long orderId, String orderNumber, BigDecimal totalAmount) {
+    public void registerPayment(Long orderId, String orderNumber, BigDecimal totalAmount) {
         Payment payment = Payment.create(orderId, orderNumber, totalAmount);
         paymentJpaRepository.save(payment);
     }
@@ -58,7 +58,7 @@ public class PaymentCommandService {
         } catch (Exception e) {
             foundPayment.reject();           // Payment: IN_PROGRESS -> FAILED
 
-            Order foundOrder = orderQueryService.findByOrderNumber(request.orderNumber());
+            Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
             foundOrder.markPaymentFailed();  // Order: PENDING -> PAYMENT_FAILED
             throw e;
         }
@@ -84,7 +84,7 @@ public class PaymentCommandService {
         // 일반결제: IN_PROGRESS -> DONE
         foundPayment.approve(response.paymentKey(), paymentMethod);
 
-        Order foundOrder = orderQueryService.findByOrderNumber(request.orderNumber());
+        Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
         foundOrder.markPaid(); // Order: PENDING -> PAID
 
         return new PaymentConfirmResponse.Instant(
@@ -127,7 +127,7 @@ public class PaymentCommandService {
                 }
                 // 망취소 대응: 우리는 FAILED지만 실제로는 결제 완료된 케이스
                 foundPayment.approve(data.paymentKey(), PaymentMethod.from(data.method()));
-                Order foundOrder = orderQueryService.findByOrderNumber(data.orderId());
+                Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
                 foundOrder.markPaid();
             }
             case "ABORTED" -> {
@@ -136,7 +136,7 @@ public class PaymentCommandService {
                     return;
                 }
                 foundPayment.reject();
-                Order foundOrder = orderQueryService.findByOrderNumber(data.orderId());
+                Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
                 foundOrder.markPaymentFailed();
             }
             case "EXPIRED" -> {
@@ -183,7 +183,7 @@ public class PaymentCommandService {
         }
 
         foundPayment.completeDeposit();
-        Order foundOrder = orderQueryService.findByOrderNumber(request.orderId());
+        Order foundOrder = orderQueryService.findById(foundPayment.getOrderId());
         foundOrder.markPaid();
     }
 
