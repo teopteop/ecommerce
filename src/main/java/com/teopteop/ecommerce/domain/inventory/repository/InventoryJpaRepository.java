@@ -20,6 +20,6 @@ public interface InventoryJpaRepository extends JpaRepository<Inventory, Long> {
     Page<Inventory> findInventoriesUnderThreshold(@Param("threshold") int threshold, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select i from Inventory i where i.productId in :productIds")
+    @Query("select i from Inventory i where i.productId in :productIds order by i.productId")
     List<Inventory> findByProductIdsWithLock(@Param("productIds") List<Long> productIds);
 }

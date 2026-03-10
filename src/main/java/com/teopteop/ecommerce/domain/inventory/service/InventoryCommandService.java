@@ -49,10 +49,15 @@ public class InventoryCommandService {
     public void restoreForCancel(List<OrderItem> items) {
         List<Long> productIds = items.stream()
                 .map(OrderItem::getProductId)
+                .sorted()
                 .toList();
 
         List<Inventory> foundInventories = inventoryJpaRepository
-                .findByProductIdsWithLock(productIds.stream().sorted().toList());
+                .findByProductIdsWithLock(productIds);
+
+        if (foundInventories.size() != productIds.size()) {
+            throw new ApplicationException(InventoryErrorCode.INVENTORY_NOT_FOUND);
+        }
 
         Map<Long, Integer> quantities = items.stream()
                 .collect(Collectors.toMap(

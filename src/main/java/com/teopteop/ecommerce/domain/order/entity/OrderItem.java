@@ -66,7 +66,7 @@ public class OrderItem extends BaseTimeEntity {
 
     public void cancel() {
         if (this.status == OrderItemStatus.CANCELED) {
-            throw new ApplicationException(OrderItemErrorCode.ORDER_ITEM_NOT_FOUND);
+            throw new ApplicationException(OrderItemErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = OrderItemStatus.CANCELED;
