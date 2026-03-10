@@ -28,6 +28,10 @@ public class Delivery {
     @Embedded
     private Address address;
 
+    /**
+     * Order 애그리거트 루트를 통해서만 저장
+     * linkDelivery() -> attachToOrder() 호출을 통해서만 세팅됨
+     */
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;

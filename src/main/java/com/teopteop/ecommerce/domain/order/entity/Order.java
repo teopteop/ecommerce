@@ -113,4 +113,13 @@ public class Order extends BaseTimeEntity {
         this.delivery.ship();
         this.status = OrderStatus.SHIPPED;
     }
+
+    public void completeDelivery() {
+        if (this.status != OrderStatus.SHIPPED) {
+            throw new ApplicationException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        this.delivery.complete();
+        this.status = OrderStatus.DELIVERED;
+    }
 }

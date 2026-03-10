@@ -62,6 +62,7 @@ public class OrderCommandService {
                 .collect(Collectors.toMap(Product::getId, p -> p));
 
         // 5. 재고 차감 (비관적 락: deductForOrder 내부에서 처리)
+        // 재고 차감 실패 시 불필요한 객체 생성을 막기 위해 주문 생성보다 앞에 배치
         Map<Long, Integer> quantities = request.items().stream()
                 .collect(Collectors.toMap(OrderItemRequest::productId, OrderItemRequest::quantity));
 
