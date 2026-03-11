@@ -52,14 +52,14 @@ public class JwtUtil {
      * @param accountRole 계정 권한(Role)
      * @return 서명된 JWT 액세스 토큰
      */
-    public String createAccessToken(Long accountId, Long memberId, AccountRole accountRole) {
+    public String createAccessToken(Long accountId, Long customerId, AccountRole accountRole) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidity);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(accountId))            // JWT Subject = accountId
                 .claim("role", accountRole.name())              // Custom Claim에 Role 추가
-                .claim("memberId", memberId)                 // Custom Claim에 memberId 추가
+                .claim("customerId", customerId)                 // Custom Claim에 customerId 추가
                 .setIssuedAt(now)                              // 발급시간
                 .setExpiration(expiryDate)                     // 만료시간
                 .signWith(secretKey, SignatureAlgorithm.HS256) // HS256 서명
@@ -116,10 +116,10 @@ public class JwtUtil {
      */
     public Authentication getAuthentication(String token) {
         Long accountId = getAccountId(token);
-        Long memberId = getMemberId(token);
+        Long customerId = getCustomerId(token);
         AccountRole role = getAccountRole(token);
 
-        AccountPrincipal principal = new AccountPrincipal(accountId, memberId, String.valueOf(accountId), "", role);
+        AccountPrincipal principal = new AccountPrincipal(accountId, customerId, String.valueOf(accountId), "", role);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
@@ -127,8 +127,8 @@ public class JwtUtil {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
-    public long getMemberId(String token) {
-        return parseClaims(token).get("memberId", Long.class);
+    public long getCustomerId(String token) {
+        return parseClaims(token).get("customerId", Long.class);
     }
 
     public AccountRole getAccountRole(String token) {

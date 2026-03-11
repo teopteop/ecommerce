@@ -9,9 +9,9 @@ import com.teopteop.ecommerce.domain.auth.entity.AccountRole;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.auth.repository.AccountJpaRepository;
-import com.teopteop.ecommerce.domain.member.entity.Member;
-import com.teopteop.ecommerce.domain.member.service.MemberCommandService;
-import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
+import com.teopteop.ecommerce.domain.customer.entity.Customer;
+import com.teopteop.ecommerce.domain.customer.service.CustomerCommandService;
+import com.teopteop.ecommerce.domain.customer.service.CustomerQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.global.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,21 +26,21 @@ public class AccountCommandService {
 
     private final AccountJpaRepository accountJpaRepository;
 
-    private final MemberCommandService memberCommandService;
+    private final CustomerCommandService customerCommandService;
 
-    private final MemberQueryService memberQueryService;
+    private final CustomerQueryService customerQueryService;
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public SignUpResponse registerAccount(SignUpRequest request) {
-        memberQueryService.validateEmailNotDuplicate(request.email());
+        customerQueryService.validateEmailNotDuplicate(request.email());
 
         if(accountJpaRepository.existsByUsername(request.username())) {
             throw new AuthException(AuthErrorCode.USERNAME_DUPLICATE);
         }
 
-        Member member = Member.create(
+        Customer customer = Customer.create(
                 request.name(),
                 request.email(),
                 request.phoneNumber(),
@@ -51,13 +51,13 @@ public class AccountCommandService {
                 )
         );
 
-        Member savedMember = memberCommandService.registerMember(member);
+        Customer savedCustomer = customerCommandService.registerCustomer(customer);
 
         Account account = Account.create(
                 request.username(),
                 passwordEncoder.encode(request.password()),
                 AccountRole.ROLE_USER,
-                savedMember.getId()
+                savedCustomer.getId()
         );
 
         Account savedAccount = accountJpaRepository.save(account);
@@ -75,7 +75,7 @@ public class AccountCommandService {
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
-        String accessToken = jwtUtil.createAccessToken(findAccount.getId(), findAccount.getMemberId(), findAccount.getRole());
+        String accessToken = jwtUtil.createAccessToken(findAccount.getId(), findAccount.getCustomerId(), findAccount.getRole());
 
         return new LoginResponse(accessToken);
     }

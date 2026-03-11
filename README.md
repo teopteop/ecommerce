@@ -33,7 +33,7 @@ Spring Boot 기반의 이커머스 백엔드 프로젝트입니다.
 com.teopteop.ecommerce
 ├── domain
 │   ├── auth        # 인증 컨텍스트 — 회원가입, 로그인, JWT 발급
-│   ├── member      # 회원 컨텍스트 — 프로필, 기본 배송지
+│   ├── customer      # 회원 컨텍스트 — 프로필, 기본 배송지
 │   ├── product     # 상품 컨텍스트 — 상품 등록/조회, 어드민 관리
 │   ├── category    # 카테고리 컨텍스트
 │   ├── inventory   # 재고 컨텍스트 — 수량 관리, 이력 추적

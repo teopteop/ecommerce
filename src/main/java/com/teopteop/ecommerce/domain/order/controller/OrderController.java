@@ -39,7 +39,7 @@ public class OrderController {
             @Valid @RequestBody OrderCancelRequest request,
             @AuthenticationPrincipal AccountPrincipal principal
     ) {
-        orderCommandService.cancelOrder(id, principal.getMemberId(), request);
+        orderCommandService.cancelOrder(id, principal.getCustomerId(), request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -49,7 +49,7 @@ public class OrderController {
             @Valid @RequestBody OrderPartialCancelRequest request,
             @AuthenticationPrincipal AccountPrincipal principal
     ) {
-       orderCommandService.partialCancelOrder(id, principal.getMemberId(), request);
+       orderCommandService.partialCancelOrder(id, principal.getCustomerId(), request);
        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -58,7 +58,7 @@ public class OrderController {
             @PathVariable Long id,
             @AuthenticationPrincipal AccountPrincipal principal
     ) {
-        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findOrderDetail(id, principal.getMemberId())));
+        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findOrderDetail(id, principal.getCustomerId())));
     }
 
     @GetMapping
@@ -66,6 +66,6 @@ public class OrderController {
             @AuthenticationPrincipal AccountPrincipal principal,
             @PageableDefault(page = 0, size = 10, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findMyOrders(principal.getMemberId(), pageable)));
+        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findMyOrders(principal.getCustomerId(), pageable)));
     }
 }

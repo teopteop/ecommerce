@@ -17,10 +17,10 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     @Query("select o from Order o join fetch o.items join fetch o.delivery where o.id = :id")
     Optional<Order> findWithItemsAndDeliveryById(@Param("id") Long id);
 
-    // memberId 기반 목록조회: Delivery fetch join, 카운트 쿼리 명시
+    // customerId 기반 목록조회: Delivery fetch join, 카운트 쿼리 명시
     @Query(
-            value = "select o from Order o join fetch o.delivery where o.memberId = :memberId",
-            countQuery = "select count(o) from Order o where o.memberId = :memberId"
+            value = "select o from Order o join fetch o.delivery where o.customerId = :customerId",
+            countQuery = "select count(o) from Order o where o.customerId = :customerId"
     )
-    Page<Order> findOrdersByMemberId(@Param("memberId") Long memberId, Pageable pageable);
+    Page<Order> findOrdersByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 }

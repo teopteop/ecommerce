@@ -26,8 +26,8 @@ public class Order extends BaseTimeEntity {
     @Column(name = "order_number", nullable = false, unique = true, updatable = false)
     private String orderNumber; // 외부 식별용 UUID
 
-    @Column(name = "member_id", nullable = false)
-    private Long memberId;
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
     @Column(name = "total_price", nullable = false, precision = 19, scale = 0)
     private BigDecimal totalPrice;
@@ -42,18 +42,18 @@ public class Order extends BaseTimeEntity {
     @OneToOne(mappedBy = "order", cascade = CascadeType.PERSIST)
     private Delivery delivery;
 
-    private Order(Long memberId, String orderNumber) {
-        this.memberId = memberId;
+    private Order(Long customerId, String orderNumber) {
+        this.customerId = customerId;
         this.orderNumber = orderNumber;
         this.totalPrice = BigDecimal.ZERO;
         this.status = OrderStatus.PENDING;
     }
 
     public static Order create(
-            Long memberId,
+            Long customerId,
             String orderNumber
     ) {
-        return new Order(memberId, orderNumber);
+        return new Order(customerId, orderNumber);
     }
 
     // 주문 항목 추가 및 총 금액 계산

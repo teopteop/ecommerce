@@ -30,28 +30,28 @@ public class Account extends BaseTimeEntity {
     @Column(nullable = false)
     private AccountStatus status;
 
-    @Column(name= "member_id",nullable = false)
-    private Long memberId;
+    @Column(name= "customer_id",nullable = false)
+    private Long customerId;
 
     private Account(
             String username,
             String encodedPassword,
             AccountRole role,
-            Long memberId
+            Long customerId
     ) {
         this.username = username;
         this.password = encodedPassword;
         this.role = role;
         this.status = AccountStatus.ACTIVE;
-        this.memberId = memberId;
+        this.customerId = customerId;
     }
 
     public static Account create(
             String username,
             String encodedPassword,
             AccountRole role,
-            Long memberId
+            Long customerId
     ) {
-        return new Account(username, encodedPassword, role, memberId);
+        return new Account(username, encodedPassword, role, customerId);
     }
 }
