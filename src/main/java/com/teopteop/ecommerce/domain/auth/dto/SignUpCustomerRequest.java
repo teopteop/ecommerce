@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record SignUpRequest(
+public record SignUpCustomerRequest(
         @NotBlank(message = "아이디는 필수 입력 사항입니다.")
         @Size(max = 30, message = "아이디는 30자 이하여야 합니다.")
         String username,
