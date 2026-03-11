@@ -5,7 +5,7 @@ import com.teopteop.ecommerce.domain.order.service.OrderCommandService;
 import com.teopteop.ecommerce.domain.order.service.OrderQueryService;
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import com.teopteop.ecommerce.global.common.dto.PageResponse;
-import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
+import com.teopteop.ecommerce.global.security.principal.AccountPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +27,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<ApiResponse<OrderCreateResponse>> createOrder(
             @Valid @RequestBody OrderCreateRequest request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @AuthenticationPrincipal AccountPrincipal principal
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(orderCommandService.registerOrder(principal.getId(), request)));
@@ -37,9 +37,9 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Void>> cancelOrder(
             @PathVariable Long id,
             @Valid @RequestBody OrderCancelRequest request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @AuthenticationPrincipal AccountPrincipal principal
     ) {
-        orderCommandService.cancelOrder(id, principal.getMemberId(), request);
+        orderCommandService.cancelOrder(id, principal.getCustomerId(), request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -47,25 +47,25 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Void>> partialCancelOrder(
             @PathVariable Long id,
             @Valid @RequestBody OrderPartialCancelRequest request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @AuthenticationPrincipal AccountPrincipal principal
     ) {
-       orderCommandService.partialCancelOrder(id, principal.getMemberId(), request);
+       orderCommandService.partialCancelOrder(id, principal.getCustomerId(), request);
        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderDetail(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserPrincipal principal
+            @AuthenticationPrincipal AccountPrincipal principal
     ) {
-        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findOrderDetail(id, principal.getMemberId())));
+        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findOrderDetail(id, principal.getCustomerId())));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getMyOrders(
-            @AuthenticationPrincipal UserPrincipal principal,
+            @AuthenticationPrincipal AccountPrincipal principal,
             @PageableDefault(page = 0, size = 10, sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findMyOrders(principal.getMemberId(), pageable)));
+        return ResponseEntity.ok(ApiResponse.success(orderQueryService.findMyOrders(principal.getCustomerId(), pageable)));
     }
 }

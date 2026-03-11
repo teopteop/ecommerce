@@ -7,10 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users")
+@Table(name = "accounts")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class User extends BaseTimeEntity {
+public class Account extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,34 +24,34 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    private AccountRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status;
+    private AccountStatus status;
 
-    @Column(name= "member_id",nullable = false)
-    private Long memberId;
+    @Column(name= "customer_id",nullable = false)
+    private Long customerId;
 
-    private User(
+    private Account(
             String username,
             String encodedPassword,
-            UserRole role,
-            Long memberId
+            AccountRole role,
+            Long customerId
     ) {
         this.username = username;
         this.password = encodedPassword;
         this.role = role;
-        this.status = UserStatus.ACTIVE;
-        this.memberId = memberId;
+        this.status = AccountStatus.ACTIVE;
+        this.customerId = customerId;
     }
 
-    public static User create(
+    public static Account create(
             String username,
             String encodedPassword,
-            UserRole role,
-            Long memberId
+            AccountRole role,
+            Long customerId
     ) {
-        return new User(username, encodedPassword, role, memberId);
+        return new Account(username, encodedPassword, role, customerId);
     }
 }

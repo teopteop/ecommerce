@@ -1,6 +1,6 @@
 package com.teopteop.ecommerce.global.config;
 
-import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
+import com.teopteop.ecommerce.global.security.principal.AccountPrincipal;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -29,7 +29,7 @@ public class JpaAuditingConfig {
                 return Optional.empty();
             }
 
-            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+            AccountPrincipal principal = (AccountPrincipal) authentication.getPrincipal();
             return Optional.of(principal.getId());
         };
     }

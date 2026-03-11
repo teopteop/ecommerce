@@ -1,10 +1,10 @@
 package com.teopteop.ecommerce.domain.order.service;
 
-import com.teopteop.ecommerce.domain.auth.entity.User;
-import com.teopteop.ecommerce.domain.auth.service.UserQueryService;
+import com.teopteop.ecommerce.domain.auth.entity.Account;
+import com.teopteop.ecommerce.domain.auth.service.AccountQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
-import com.teopteop.ecommerce.domain.member.entity.Member;
-import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
+import com.teopteop.ecommerce.domain.customer.entity.Customer;
+import com.teopteop.ecommerce.domain.customer.service.CustomerQueryService;
 import com.teopteop.ecommerce.domain.order.dto.*;
 import com.teopteop.ecommerce.domain.order.entity.Delivery;
 import com.teopteop.ecommerce.domain.order.entity.Order;
@@ -37,20 +37,20 @@ public class OrderCommandService {
 
     private final OrderJpaRepository orderJpaRepository;
 
-    private final UserQueryService userQueryService;
-    private final MemberQueryService memberQueryService;
+    private final AccountQueryService accountQueryService;
+    private final CustomerQueryService customerQueryService;
     private final ProductQueryService productQueryService;
 
     private final InventoryCommandService inventoryCommandService;
     private final PaymentCommandService paymentCommandService;
 
-    public OrderCreateResponse registerOrder(Long userId, OrderCreateRequest request) {
+    public OrderCreateResponse registerOrder(Long accountId, OrderCreateRequest request) {
 
-        // 1. User 조회 -> memberId 확보
-        User foundUser = userQueryService.findActiveUserById(userId);
+        // 1. Account 조회 -> customerId 확보
+        Account foundAccount = accountQueryService.findActiveAccountById(accountId);
 
-        // 2. Member 조회 -> 수신자 정보
-        Member foundMember = memberQueryService.findById(foundUser.getMemberId());
+        // 2. Customer 조회 -> 수신자 정보
+        Customer foundCustomer = customerQueryService.findById(foundAccount.getCustomerId());
 
         // 3. 상품 ID 목록 추출 후 한 번에 조회
         List<Long> productIds = request.items().stream()
@@ -72,7 +72,7 @@ public class OrderCommandService {
         inventoryCommandService.deductForOrder(productIds, quantities);
 
         // 6. Order 생성
-        Order order = Order.create(foundUser.getMemberId(), UUID.randomUUID().toString());
+        Order order = Order.create(foundAccount.getCustomerId(), UUID.randomUUID().toString());
 
         // 7. OrderItem 생성 및 Order에 추가
         for (OrderItemRequest item : request.items()) {
@@ -81,12 +81,12 @@ public class OrderCommandService {
             order.addOrderItem(orderItem);
         }
 
-        // 8. 배송지 결정 (null일 시 Member 기본 주소 사용)
+        // 8. 배송지 결정 (null일 시 Customer 기본 주소 사용)
         Address deliveryAddress = Optional.ofNullable(request.address())
                 .map(a -> new Address(a.city(), a.street(), a.zipcode()))
-                .orElse(foundMember.getAddress());
+                .orElse(foundCustomer.getAddress());
 
-        Delivery delivery = Delivery.create(foundMember.getName(), foundMember.getPhoneNumber(), deliveryAddress);
+        Delivery delivery = Delivery.create(foundCustomer.getName(), foundCustomer.getPhoneNumber(), deliveryAddress);
         order.linkDelivery(delivery);
 
         // 9. 저장 (CascadeType.PERSIST로 인해 OrderItem, Delivery 함께 저장)
@@ -98,14 +98,14 @@ public class OrderCommandService {
         return new OrderCreateResponse(savedOrder.getId(), savedOrder.getOrderNumber());
     }
 
-    public void cancelOrder(Long id, Long memberId, OrderCancelRequest request) {
+    public void cancelOrder(Long id, Long customerId, OrderCancelRequest request) {
 
         // 1. Order 조회
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
-        if (!foundOrder.getMemberId().equals(memberId)) {
+        if (!foundOrder.getCustomerId().equals(customerId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
@@ -127,14 +127,14 @@ public class OrderCommandService {
         paymentCommandService.cancelPayment(foundOrder.getOrderNumber(), request.cancelReason(), null);
     }
 
-    public void partialCancelOrder(Long id, Long memberId, OrderPartialCancelRequest request) {
+    public void partialCancelOrder(Long id, Long customerId, OrderPartialCancelRequest request) {
 
         // 1. Order 조회
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
-        if (!foundOrder.getMemberId().equals(memberId)) {
+        if (!foundOrder.getCustomerId().equals(customerId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
