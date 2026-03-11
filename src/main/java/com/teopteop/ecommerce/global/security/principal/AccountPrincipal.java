@@ -1,6 +1,6 @@
 package com.teopteop.ecommerce.global.security.principal;
 
-import com.teopteop.ecommerce.domain.auth.entity.AccountRole;
+import com.teopteop.ecommerce.domain.account.entity.AccountRole;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,20 +14,17 @@ import java.util.List;
 public class AccountPrincipal implements UserDetails {
 
     private final Long id;
-    private final Long customerId;
     private final String username;
     @Nullable private final String password;
     private final AccountRole role;
 
     public AccountPrincipal(
             Long id,
-            Long customerId,
             String username,
             @Nullable String password,
             AccountRole role
     ) {
         this.id = id;
-        this.customerId = customerId;
         this.username = username;
         this.password = password;
         this.role = role;

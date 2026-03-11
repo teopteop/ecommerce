@@ -28,19 +28,19 @@ public class OrderQueryService {
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
-    public OrderResponse findOrderDetail(Long orderId, Long customerId) {
+    public OrderResponse findOrderDetail(Long orderId, Long accountId) {
         Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(orderId)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        if (!foundOrder.getCustomerId().equals(customerId)) {
+        if (!foundOrder.getAccountId().equals(accountId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
         return OrderResponse.ofDetail(foundOrder);
     }
 
-    public PageResponse<OrderResponse> findMyOrders(Long customerId, Pageable pageable) {
-        Page<Order> foundOrders = orderJpaRepository.findOrdersByCustomerId(customerId, pageable);
+    public PageResponse<OrderResponse> findMyOrders(Long accountId, Pageable pageable) {
+        Page<Order> foundOrders = orderJpaRepository.findOrdersByAccountId(accountId, pageable);
 
         return PageResponse.from(foundOrders.map(OrderResponse::ofSummary));
     }

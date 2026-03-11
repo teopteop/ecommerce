@@ -13,8 +13,8 @@ public class CustomerQueryService {
 
     private final CustomerJpaRepository customerJpaRepository;
 
-    public Customer findById(Long id) {
-        return customerJpaRepository.findById(id)
+    public Customer findByAccountId(Long id) {
+        return customerJpaRepository.findByAccountId(id)
                 .orElseThrow(() -> new CustomerException(CustomerErrorCode.CUSTOMER_NOT_FOUND));
     }
 

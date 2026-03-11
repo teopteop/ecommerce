@@ -17,6 +17,9 @@ public class Customer extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "account_id", nullable = false, unique = true)
+    private Long accountId;
+
     @Column(nullable = false, length = 30)
     private String name;
 
@@ -30,11 +33,13 @@ public class Customer extends BaseTimeEntity {
     private Address address;
 
     private Customer(
+            Long accountId,
             String name,
             String email,
             String phoneNumber,
             Address address
     ) {
+        this.accountId = accountId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
@@ -42,11 +47,12 @@ public class Customer extends BaseTimeEntity {
     }
 
     public static Customer create(
+            Long accountId,
             String name,
             String email,
             String phoneNumber,
             Address address
     ) {
-        return new Customer(name, email, phoneNumber, address);
+        return new Customer(accountId, name, email, phoneNumber, address);
     }
 }
