@@ -1,8 +1,8 @@
 package com.teopteop.ecommerce.global.security.jwt;
 
-import com.teopteop.ecommerce.domain.auth.entity.UserRole;
-import com.teopteop.ecommerce.domain.auth.repository.UserJpaRepository;
-import com.teopteop.ecommerce.global.security.principal.UserPrincipal;
+import com.teopteop.ecommerce.domain.auth.entity.AccountRole;
+import com.teopteop.ecommerce.domain.auth.repository.AccountJpaRepository;
+import com.teopteop.ecommerce.global.security.principal.AccountPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +28,13 @@ public class JwtUtil {
      * @param secret Base64로 인코딩된 비밀 키
      * @param accessTokenValidity 액세스 토큰 유효시간(ms)
      * @param refreshTokenValidity 리프레시 토큰 유효시간(ms)
-     * @param userJpaRepository 유저 존재 여부 확인용 Repository
+     * @param accountJpaRepository 계정 존재 여부 확인용 Repository
      */
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration}") long accessTokenValidity,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenValidity,
-            UserJpaRepository userJpaRepository
+            AccountJpaRepository accountJpaRepository
     ) {
         byte[] decodedKey = Base64.getDecoder().decode(secret);
         if(decodedKey.length < 32) {
@@ -48,17 +48,17 @@ public class JwtUtil {
 
     /**
      * 액세스 토큰 생성
-     * @param userId 유저Id
-     * @param userRole 유저 권한(Role)
+     * @param accountId 계정 Id
+     * @param accountRole 계정 권한(Role)
      * @return 서명된 JWT 액세스 토큰
      */
-    public String createAccessToken(Long userId, Long memberId, UserRole userRole) {
+    public String createAccessToken(Long accountId, Long memberId, AccountRole accountRole) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidity);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))            // JWT Subject = userId
-                .claim("role", userRole.name())              // Custom Claim에 Role 추가
+                .setSubject(String.valueOf(accountId))            // JWT Subject = accountId
+                .claim("role", accountRole.name())              // Custom Claim에 Role 추가
                 .claim("memberId", memberId)                 // Custom Claim에 memberId 추가
                 .setIssuedAt(now)                              // 발급시간
                 .setExpiration(expiryDate)                     // 만료시간
@@ -68,15 +68,15 @@ public class JwtUtil {
 
     /**
      * 액세스 토큰 생성
-     * @param userId 유저Id
+     * @param accountId 계정 Id
      * @return 서명된 JWT 리프레시 토큰
      */
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(Long accountId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenValidity);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
+                .setSubject(String.valueOf(accountId))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -115,15 +115,15 @@ public class JwtUtil {
      * @return Spring Security Authentication
      */
     public Authentication getAuthentication(String token) {
-        Long userId = getUserId(token);
+        Long accountId = getAccountId(token);
         Long memberId = getMemberId(token);
-        UserRole role = getUserRole(token);
+        AccountRole role = getAccountRole(token);
 
-        UserPrincipal principal = new UserPrincipal(userId, memberId, String.valueOf(userId), "", role);
+        AccountPrincipal principal = new AccountPrincipal(accountId, memberId, String.valueOf(accountId), "", role);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
-    public long getUserId(String token) {
+    public long getAccountId(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
@@ -131,10 +131,10 @@ public class JwtUtil {
         return parseClaims(token).get("memberId", Long.class);
     }
 
-    public UserRole getUserRole(String token) {
+    public AccountRole getAccountRole(String token) {
         String role = parseClaims(token).get("role", String.class);
 
-        return role != null ? UserRole.valueOf(role) : null;
+        return role != null ? AccountRole.valueOf(role) : null;
     }
 
     private Claims parseClaims(String token) {
