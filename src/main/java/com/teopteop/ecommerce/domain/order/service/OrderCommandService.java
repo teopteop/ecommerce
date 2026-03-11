@@ -1,7 +1,7 @@
 package com.teopteop.ecommerce.domain.order.service;
 
-import com.teopteop.ecommerce.domain.auth.entity.User;
-import com.teopteop.ecommerce.domain.auth.service.UserQueryService;
+import com.teopteop.ecommerce.domain.auth.entity.Account;
+import com.teopteop.ecommerce.domain.auth.service.AccountQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.member.entity.Member;
 import com.teopteop.ecommerce.domain.member.service.MemberQueryService;
@@ -37,20 +37,20 @@ public class OrderCommandService {
 
     private final OrderJpaRepository orderJpaRepository;
 
-    private final UserQueryService userQueryService;
+    private final AccountQueryService accountQueryService;
     private final MemberQueryService memberQueryService;
     private final ProductQueryService productQueryService;
 
     private final InventoryCommandService inventoryCommandService;
     private final PaymentCommandService paymentCommandService;
 
-    public OrderCreateResponse registerOrder(Long userId, OrderCreateRequest request) {
+    public OrderCreateResponse registerOrder(Long accountId, OrderCreateRequest request) {
 
-        // 1. User 조회 -> memberId 확보
-        User foundUser = userQueryService.findActiveUserById(userId);
+        // 1. Account 조회 -> memberId 확보
+        Account foundAccount = accountQueryService.findActiveAccountById(accountId);
 
         // 2. Member 조회 -> 수신자 정보
-        Member foundMember = memberQueryService.findById(foundUser.getMemberId());
+        Member foundMember = memberQueryService.findById(foundAccount.getMemberId());
 
         // 3. 상품 ID 목록 추출 후 한 번에 조회
         List<Long> productIds = request.items().stream()
@@ -72,7 +72,7 @@ public class OrderCommandService {
         inventoryCommandService.deductForOrder(productIds, quantities);
 
         // 6. Order 생성
-        Order order = Order.create(foundUser.getMemberId(), UUID.randomUUID().toString());
+        Order order = Order.create(foundAccount.getMemberId(), UUID.randomUUID().toString());
 
         // 7. OrderItem 생성 및 Order에 추가
         for (OrderItemRequest item : request.items()) {
