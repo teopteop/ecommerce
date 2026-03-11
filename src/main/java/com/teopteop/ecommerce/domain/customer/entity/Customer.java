@@ -1,4 +1,4 @@
-package com.teopteop.ecommerce.domain.member.entity;
+package com.teopteop.ecommerce.domain.customer.entity;
 
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import com.teopteop.ecommerce.global.common.vo.Address;
@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "members")
+@Table(name = "customers")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Member extends BaseTimeEntity {
+public class Customer extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,7 @@ public class Member extends BaseTimeEntity {
     @Embedded
     private Address address;
 
-    private Member(
+    private Customer(
             String name,
             String email,
             String phoneNumber,
@@ -41,12 +41,12 @@ public class Member extends BaseTimeEntity {
         this.address = address;
     }
 
-    public static Member create(
+    public static Customer create(
             String name,
             String email,
             String phoneNumber,
             Address address
     ) {
-        return new Member(name, email, phoneNumber, address);
+        return new Customer(name, email, phoneNumber, address);
     }
 }
