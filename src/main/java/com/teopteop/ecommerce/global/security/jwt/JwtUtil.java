@@ -1,7 +1,7 @@
 package com.teopteop.ecommerce.global.security.jwt;
 
-import com.teopteop.ecommerce.domain.auth.entity.AccountRole;
-import com.teopteop.ecommerce.domain.auth.repository.AccountJpaRepository;
+import com.teopteop.ecommerce.domain.account.entity.AccountRole;
+import com.teopteop.ecommerce.domain.account.repository.AccountJpaRepository;
 import com.teopteop.ecommerce.global.security.principal.AccountPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

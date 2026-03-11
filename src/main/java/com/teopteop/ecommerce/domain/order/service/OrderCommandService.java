@@ -1,7 +1,7 @@
 package com.teopteop.ecommerce.domain.order.service;
 
-import com.teopteop.ecommerce.domain.auth.entity.Account;
-import com.teopteop.ecommerce.domain.auth.service.AccountQueryService;
+import com.teopteop.ecommerce.domain.account.entity.Account;
+import com.teopteop.ecommerce.domain.account.service.AccountQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
 import com.teopteop.ecommerce.domain.customer.entity.Customer;
 import com.teopteop.ecommerce.domain.customer.service.CustomerQueryService;

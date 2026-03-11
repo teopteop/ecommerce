@@ -1,6 +1,6 @@
 package com.teopteop.ecommerce.global.security.principal;
 
-import com.teopteop.ecommerce.domain.auth.entity.AccountRole;
+import com.teopteop.ecommerce.domain.account.entity.AccountRole;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
