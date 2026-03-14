@@ -8,9 +8,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record SignUpCustomerRequest(
-        @NotBlank(message = "아이디는 필수 입력 사항입니다.")
-        @Size(max = 30, message = "아이디는 30자 이하여야 합니다.")
-        String username,
+        @NotBlank(message = "이메일은 필수 입력 사항입니다.")
+        @Email(message = "유효한 형식의 이메일을 입력해주세요.")
+        String email,
 
         @NotBlank(message = "비밀번호는 필수 입력 사항입니다.")
         @Size(min = 8, max = 64, message = "비밀번호는 8~64자 입니다.")
@@ -24,9 +24,6 @@ public record SignUpCustomerRequest(
         @Size(max = 30, message = "이름은 30자 이하로 입력해주세요.")
         String name,
 
-        @NotBlank(message = "이메일은 필수 입력 사항입니다.")
-        @Email(message = "유효한 형식의 이메일을 입력해주세요.")
-        String email,
 
         @NotBlank(message = "휴대폰 번호는 필수 입력 사항입니다.")
         @Pattern(

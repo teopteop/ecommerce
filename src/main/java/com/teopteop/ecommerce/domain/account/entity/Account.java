@@ -16,8 +16,8 @@ public class Account extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 30)
-    private String username;
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column(nullable = false, length = 100)
     private String password;
@@ -31,21 +31,21 @@ public class Account extends BaseTimeEntity {
     private AccountStatus status;
 
     private Account(
-            String username,
+            String email,
             String encodedPassword,
             AccountRole role
     ) {
-        this.username = username;
+        this.email = email;
         this.password = encodedPassword;
         this.role = role;
         this.status = AccountStatus.ACTIVE;
     }
 
     public static Account create(
-            String username,
+            String email,
             String encodedPassword,
             AccountRole role
     ) {
-        return new Account(username, encodedPassword, role);
+        return new Account(email, encodedPassword, role);
     }
 }

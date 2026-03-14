@@ -18,10 +18,4 @@ public class CustomerQueryService {
                 .orElseThrow(() -> new CustomerException(CustomerErrorCode.CUSTOMER_NOT_FOUND));
     }
 
-    public void validateEmailNotDuplicate(String email) {
-        if (customerJpaRepository.existsByEmail(email)) {
-            throw new CustomerException(CustomerErrorCode.EMAIL_DUPLICATE);
-        }
-    }
-
 }
