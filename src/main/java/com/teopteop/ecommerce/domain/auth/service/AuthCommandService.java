@@ -12,7 +12,6 @@ import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.customer.entity.Customer;
 import com.teopteop.ecommerce.domain.customer.service.CustomerCommandService;
-import com.teopteop.ecommerce.domain.customer.service.CustomerQueryService;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.global.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,32 +28,27 @@ public class AuthCommandService {
     private final CustomerCommandService customerCommandService;
 
     private final AccountQueryService accountQueryService;
-    private final CustomerQueryService customerQueryService;
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public SignUpCustomerResponse registerCustomerAccount(SignUpCustomerRequest request) {
         // 1. Email 중복 검증
-        customerQueryService.validateEmailNotDuplicate(request.email());
+        accountQueryService.validateEmailNotDuplicate(request.email());
 
-        // 2. Username 중복 검증
-        accountQueryService.validateUsernameNotDuplicate(request.username());
-
-        // 3. 계정 생성 및 저장
+        // 2. 계정 생성 및 저장
         Account account = Account.create(
-                request.username(),
+                request.email(),
                 passwordEncoder.encode(request.password()),
                 AccountRole.ROLE_CUSTOMER
         );
 
         Account savedAccount = accountCommandService.registerAccount(account);
 
-        // 4. 고객 생성 및 저장
+        // 3. 고객 생성 및 저장
         Customer customer = Customer.create(
                 savedAccount.getId(),
                 request.name(),
-                request.email(),
                 request.phoneNumber(),
                 new Address(
                         request.address().city(),
@@ -68,14 +62,14 @@ public class AuthCommandService {
         return new SignUpCustomerResponse(
                 savedCustomer.getId(),
                 savedCustomer.getAccountId(),
-                savedAccount.getUsername()
+                savedAccount.getEmail()
         );
     }
 
     // 조회용 메서드지만 '인증 행위' 자체가 Command에 가깝고 JWT 발급이 포함되므로 AuthQueryService로 분리하지 않음
     @Transactional(readOnly = true)
     public LoginResponse authenticate(LoginRequest request) {
-        Account findAccount = accountQueryService.findActiveAccountByUsername(request.username());
+        Account findAccount = accountQueryService.findActiveAccountByEmail(request.email());
 
         if(!passwordEncoder.matches(request.password(), findAccount.getPassword())) {
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
