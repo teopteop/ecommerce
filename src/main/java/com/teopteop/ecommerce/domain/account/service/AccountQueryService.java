@@ -20,14 +20,14 @@ public class AccountQueryService {
                 .orElseThrow(() -> new AccountException(AccountErrorCode.USER_NOT_FOUND));
     }
 
-    public void validateUsernameNotDuplicate(String username) {
-        if (accountJpaRepository.existsByUsername(username)) {
-            throw new AccountException(AccountErrorCode.USERNAME_DUPLICATE);
+    public void validateEmailNotDuplicate(String email) {
+        if (accountJpaRepository.existsByEmail(email)) {
+            throw new AccountException(AccountErrorCode.EMAIL_DUPLICATE);
         }
     }
 
-    public Account findActiveAccountByUsername(String username) {
-        return accountJpaRepository.findActiveAccountByUsername(username)
+    public Account findActiveAccountByEmail(String email) {
+        return accountJpaRepository.findActiveAccountByEmail(email)
                 .orElseThrow(() -> new AccountException(AccountErrorCode.INVALID_CREDENTIALS));
     }
 }
