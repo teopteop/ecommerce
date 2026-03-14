@@ -23,9 +23,6 @@ public class Customer extends BaseTimeEntity {
     @Column(nullable = false, length = 30)
     private String name;
 
-    @Column(unique = true, nullable = false, length = 50)
-    private String email;
-
     @Column(name = "phone_number",nullable = false, length = 20)
     private String phoneNumber;
 
@@ -35,13 +32,11 @@ public class Customer extends BaseTimeEntity {
     private Customer(
             Long accountId,
             String name,
-            String email,
             String phoneNumber,
             Address address
     ) {
         this.accountId = accountId;
         this.name = name;
-        this.email = email;
         this.phoneNumber = phoneNumber;
         this.address = address;
     }
@@ -49,10 +44,9 @@ public class Customer extends BaseTimeEntity {
     public static Customer create(
             Long accountId,
             String name,
-            String email,
             String phoneNumber,
             Address address
     ) {
-        return new Customer(accountId, name, email, phoneNumber, address);
+        return new Customer(accountId, name, phoneNumber, address);
     }
 }
