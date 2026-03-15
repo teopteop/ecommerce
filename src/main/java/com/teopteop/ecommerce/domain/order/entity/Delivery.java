@@ -27,6 +27,11 @@ public class Delivery extends BaseTimeEntity {
     private String phoneNumber;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "city", column = @Column(nullable = false, length = 50)),
+            @AttributeOverride(name = "street", column = @Column(nullable = false, length = 100)),
+            @AttributeOverride(name = "zipcode", column = @Column(nullable = false, length = 5))
+    })
     private Address address;
 
     /**
