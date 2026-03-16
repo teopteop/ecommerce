@@ -24,11 +24,17 @@ public class OrderItem extends BaseTimeEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    @Column(name = "seller_id", nullable = false)
+    private Long sellerId;
+
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "product_name", nullable = false)
+    private String productName; // 주문 당시 상품명 (스냅샷)
+
     @Column(name = "order_price", nullable = false, precision = 19, scale = 0)
-    private BigDecimal orderPrice; // 주문 당시 가격
+    private BigDecimal orderPrice; // 주문 당시 가격 (스냅샷)
 
     @Column(nullable = false)
     private int quantity;
@@ -37,22 +43,28 @@ public class OrderItem extends BaseTimeEntity {
     private OrderItemStatus status;
 
     private OrderItem(
+            Long sellerId,
             Long productId,
+            String productName,
             BigDecimal orderPrice,
             int quantity
     ) {
+        this.sellerId = sellerId;
         this.productId = productId;
+        this.productName = productName;
         this.orderPrice = orderPrice;
         this.quantity = quantity;
         this.status = OrderItemStatus.ORDERED;
     }
 
     public static OrderItem create(
+            Long sellerId,
             Long productId,
+            String productName,
             BigDecimal orderPrice,
             int quantity
     ) {
-        return new OrderItem(productId, orderPrice, quantity);
+        return new OrderItem(sellerId, productId, productName, orderPrice, quantity);
     }
 
     /**

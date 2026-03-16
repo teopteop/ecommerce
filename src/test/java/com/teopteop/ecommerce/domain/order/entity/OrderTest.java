@@ -15,12 +15,12 @@ public class OrderTest {
 
     private Order createOrder() {
         Order order = Order.create(1L, "ORDER-UUID-1");
-        OrderItem item = OrderItem.create(1L, BigDecimal.valueOf(10000), 2);
+        OrderItem item = OrderItem.create(1L, 1L, "상품명", BigDecimal.valueOf(10000), 2);
         order.addOrderItem(item);
 
         Address address = new Address("서울", "강남대로 1", "12345");
-        Delivery delivery = Delivery.create("홍길동", "010-1234-5678", address);
-        order.linkDelivery(delivery);
+        Delivery delivery = Delivery.create(1L, "홍길동", "010-1234-5678", address);
+        order.addDelivery(delivery);
 
         return order;
     }
@@ -127,17 +127,6 @@ public class OrderTest {
                         assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
-    @Test
-    @DisplayName("SHIPPED 상태에서 cancel 호출 시 예외")
-    void cancelFailsWhenShipped() {
-        Order paidOrder = createPaidOrder();
-        paidOrder.startShipping();
-
-        assertThatThrownBy(paidOrder::cancel)
-                .isInstanceOfSatisfying(OrderException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
-    }
-
     // === partialCancel ===
     @Test
     @DisplayName("PAID 상태에서 partialCancel 호출 시 PARTIAL_CANCELED")
@@ -146,17 +135,6 @@ public class OrderTest {
         paidOrder.partialCancel();
 
         assertThat(paidOrder.getStatus()).isEqualTo(OrderStatus.PARTIAL_CANCELED);
-    }
-
-    @Test
-    @DisplayName("SHIPPED 상태에서 partialCancel 호출 시 예외")
-    void partialCancelFailsWhenShipped() {
-        Order paidOrder = createPaidOrder();
-        paidOrder.startShipping();
-
-        assertThatThrownBy(paidOrder::partialCancel)
-                .isInstanceOfSatisfying(OrderException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.INVALID_STATUS_TRANSITION));
     }
 
 }

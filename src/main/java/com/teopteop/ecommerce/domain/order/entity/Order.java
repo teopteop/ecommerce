@@ -1,6 +1,5 @@
 package com.teopteop.ecommerce.domain.order.entity;
 
-import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
@@ -39,8 +38,8 @@ public class Order extends BaseTimeEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
     private List<OrderItem> items = new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.PERSIST)
-    private Delivery delivery;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
+    private List<Delivery> deliveries = new ArrayList<>();
 
     private Order(Long accountId, String orderNumber) {
         this.accountId = accountId;
@@ -64,8 +63,8 @@ public class Order extends BaseTimeEntity {
     }
 
     // 연관관계 편의 메서드
-    public void linkDelivery(Delivery delivery) {
-        this.delivery = delivery;
+    public void addDelivery(Delivery delivery) {
+        this.deliveries.add(delivery);
         delivery.attachToOrder(this);
     }
 
@@ -104,22 +103,4 @@ public class Order extends BaseTimeEntity {
         this.status = OrderStatus.PAYMENT_FAILED;
     }
 
-    // Delivery 상태 전이 위임
-    public void startShipping() {
-        if (this.status != OrderStatus.PAID) {
-            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
-        }
-
-        this.delivery.ship();
-        this.status = OrderStatus.SHIPPED;
-    }
-
-    public void completeDelivery() {
-        if (this.status != OrderStatus.SHIPPED) {
-            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
-        }
-
-        this.delivery.complete();
-        this.status = OrderStatus.DELIVERED;
-    }
 }
