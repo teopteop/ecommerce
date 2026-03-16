@@ -1,5 +1,5 @@
 package com.teopteop.ecommerce.domain.product.dto;
 
-public record ProductAdminCreateResponse(
+public record ProductCreateResponse(
         Long id
 ) {}

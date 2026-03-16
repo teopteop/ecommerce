@@ -2,14 +2,16 @@ package com.teopteop.ecommerce.domain.product.service;
 
 import com.teopteop.ecommerce.domain.category.service.CategoryQueryService;
 import com.teopteop.ecommerce.domain.inventory.service.InventoryCommandService;
-import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateRequest;
-import com.teopteop.ecommerce.domain.product.dto.ProductAdminCreateResponse;
+import com.teopteop.ecommerce.domain.product.dto.ProductCreateResponse;
 import com.teopteop.ecommerce.domain.product.dto.ProductAdminUpdateRequest;
+import com.teopteop.ecommerce.domain.product.dto.ProductCreateRequest;
 import com.teopteop.ecommerce.domain.product.entity.Product;
 import com.teopteop.ecommerce.domain.product.exception.ProductErrorCode;
 import com.teopteop.ecommerce.domain.product.exception.ProductException;
 import com.teopteop.ecommerce.domain.product.repository.ProductJpaRepository;
 import com.teopteop.ecommerce.domain.product.repository.ProductQueryRepository;
+import com.teopteop.ecommerce.domain.seller.entity.Seller;
+import com.teopteop.ecommerce.domain.seller.service.SellerQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +27,23 @@ public class ProductCommandService {
     private final InventoryCommandService inventoryCommandService;
 
     private final CategoryQueryService categoryQueryService;
+    private final SellerQueryService sellerQueryService;
 
-    public ProductAdminCreateResponse registerProduct(ProductAdminCreateRequest request) {
+    public ProductCreateResponse registerProduct(Long accountId, ProductCreateRequest request) {
         // 1. 카테고리 검증
         categoryQueryService.validateCategoryExists(request.categoryId());
 
+        // 2. sellerId 확보
+        Seller foundSeller = sellerQueryService.findByAccountId(accountId);
+
         // 2. 상품 생성
-        Product product = Product.create(request.name(), request.price(), request.categoryId());
+        Product product = Product.create(foundSeller.getId(), request.name(), request.price(), request.categoryId());
         Product savedProduct = productJpaRepository.save(product);
 
         // 3. 재고 생성
         inventoryCommandService.registerInventory(savedProduct.getId(), request.stockQuantity());
 
-        return new ProductAdminCreateResponse(savedProduct.getId());
+        return new ProductCreateResponse(savedProduct.getId());
     }
 
     public void markProductDeleted(Long id) {

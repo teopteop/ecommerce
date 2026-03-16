@@ -18,6 +18,9 @@ public class Product extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "seller_id", nullable = false)
+    private Long sellerId;
+
     @Column(nullable = false)
     private String name;
 
@@ -35,10 +38,12 @@ public class Product extends BaseEntity {
     private boolean deleted;
 
     private Product(
+            Long sellerId,
             String name,
             BigDecimal price,
             Long categoryId
     ) {
+        this.sellerId = sellerId;
         this.name = name;
         this.price = price;
         this.status = ProductStatus.STOPPED;
@@ -47,11 +52,12 @@ public class Product extends BaseEntity {
     }
 
     public static Product create(
+            Long sellerId,
             String name,
             BigDecimal price,
             Long categoryId
     ) {
-        return new Product(name, price, categoryId);
+        return new Product(sellerId, name, price, categoryId);
     }
 
     public void markDeleted() {
