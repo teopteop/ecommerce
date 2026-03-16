@@ -1,6 +1,7 @@
 package com.teopteop.ecommerce.domain.account.service;
 
 import com.teopteop.ecommerce.domain.account.entity.Account;
+import com.teopteop.ecommerce.domain.account.entity.AccountRole;
 import com.teopteop.ecommerce.domain.account.repository.AccountJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,13 @@ public class AccountCommandService {
 
     private final AccountJpaRepository accountJpaRepository;
 
-    public Account registerAccount(Account account) {
-        return accountJpaRepository.save(account);
+    public Account registerAccount(String email, String encodedPassword, AccountRole role) {
+        return accountJpaRepository.save(
+                Account.create(
+                        email,
+                        encodedPassword,
+                        role
+                )
+        );
     }
 }
