@@ -71,7 +71,13 @@ public class OrderCommandService {
         // 6. OrderItem 생성 및 Order에 추가
         for (OrderItemRequest item : request.items()) {
             Product product = productMap.get(item.productId());
-            OrderItem orderItem = OrderItem.create(product.getId(), product.getPrice(), item.quantity());
+            OrderItem orderItem = OrderItem.create(
+                    product.getSellerId(),
+                    product.getId(),
+                    product.getName(),
+                    product.getPrice(),
+                    item.quantity()
+            );
             order.addOrderItem(orderItem);
         }
 
@@ -80,13 +86,24 @@ public class OrderCommandService {
                 .map(a -> new Address(a.city(), a.street(), a.zipcode()))
                 .orElse(foundCustomer.getAddress());
 
-        Delivery delivery = Delivery.create(foundCustomer.getName(), foundCustomer.getPhoneNumber(), deliveryAddress);
-        order.linkDelivery(delivery);
+        // 8. 셀러별 그룹핑 후 Delivery 각각 생성
+        Map<Long, List<OrderItem>> itemsBySeller = order.getItems().stream()
+                .collect(Collectors.groupingBy(OrderItem::getSellerId));
 
-        // 8. 저장 (CascadeType.PERSIST로 인해 OrderItem, Delivery 함께 저장)
+        itemsBySeller.forEach((sellerId, sellerItems) -> {
+            Delivery delivery = Delivery.create(
+                    sellerId,
+                    foundCustomer.getName(),
+                    foundCustomer.getPhoneNumber(),
+                    deliveryAddress
+            );
+            order.addDelivery(delivery);
+        });
+
+        // 9. 저장 (CascadeType.PERSIST로 인해 OrderItem, Delivery 함께 저장)
         Order savedOrder = orderJpaRepository.save(order);
 
-        // 9. Payment 저장 메서드 호출
+        // 10. Payment 저장 메서드 호출
         paymentCommandService.registerPayment(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getTotalPrice());
 
         return new OrderCreateResponse(savedOrder.getId(), savedOrder.getOrderNumber());
@@ -95,15 +112,18 @@ public class OrderCommandService {
     public void cancelOrder(Long id, Long accountId, OrderCancelRequest request) {
 
         // 1. Order 조회
-        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveriesById(id)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
+        // 2. 취소 가능 여부 확인 - 본인 주문인지, 모든 상품의 배송이 취소 가능 상태인지 검증
         if (!foundOrder.getAccountId().equals(accountId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
-        if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
+        boolean cancelable = foundOrder.getDeliveries().stream()
+                .allMatch(d -> d.isCancelable(LocalDateTime.now()));
+
+        if (!cancelable) {
             throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -124,22 +144,32 @@ public class OrderCommandService {
     public void partialCancelOrder(Long id, Long accountId, OrderPartialCancelRequest request) {
 
         // 1. Order 조회
-        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(id)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveriesById(id)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 취소 가능 여부 확인 - 본인 주문인지, 취소 가능 상태인지 검증
+        // 2. 취소할 아이템 필터링
+        List<OrderItem> itemsToCancel = foundOrder.getItems().stream()
+                .filter(item -> request.orderItemIds().contains(item.getId()))
+                .toList();
+
+        // 3. 취소 가능 여부 확인 - 본인 주문인지, 상품의 배송이 취소 가능 상태인지 검증
         if (!foundOrder.getAccountId().equals(accountId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
-        if (!foundOrder.getDelivery().isCancelable(LocalDateTime.now())) {
+        // 취소할 아이템의 sellerId 목록
+        List<Long> sellerIds = itemsToCancel.stream()
+                .map(OrderItem::getSellerId)
+                .toList();
+
+        // sellerIds에 포함된 배송의 취소 가능 여부 검증
+        boolean cancelable = foundOrder.getDeliveries().stream()
+                .filter(d -> sellerIds.contains(d.getSellerId()))
+                .allMatch(d -> d.isCancelable(LocalDateTime.now()));
+
+        if (!cancelable) {
             throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
-
-        // 3. 취소할 아이템 필터링
-        List<OrderItem> itemsToCancel = foundOrder.getItems().stream()
-                .filter(item -> request.orderItemIds().contains(item.getId()))
-                .toList();
 
         if (itemsToCancel.isEmpty()) {
             throw new OrderException(OrderItemErrorCode.ORDER_ITEM_NOT_FOUND);
