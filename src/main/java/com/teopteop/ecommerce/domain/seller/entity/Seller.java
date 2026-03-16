@@ -1,5 +1,7 @@
 package com.teopteop.ecommerce.domain.seller.entity;
 
+import com.teopteop.ecommerce.domain.seller.exception.SellerErrorCode;
+import com.teopteop.ecommerce.domain.seller.exception.SellerException;
 import com.teopteop.ecommerce.domain.seller.vo.BusinessInfo;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import com.teopteop.ecommerce.global.common.vo.Address;
@@ -78,6 +80,10 @@ public class Seller extends BaseTimeEntity {
 
     // === 상태전이 메서드 ===
     public void activate() {
+        if (this.status != SellerStatus.PENDING) {
+            throw new SellerException(SellerErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
         this.status = SellerStatus.ACTIVE;
     }
 

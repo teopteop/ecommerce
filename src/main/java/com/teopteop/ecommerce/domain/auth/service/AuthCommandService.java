@@ -4,14 +4,15 @@ import com.teopteop.ecommerce.domain.account.entity.Account;
 import com.teopteop.ecommerce.domain.account.entity.AccountRole;
 import com.teopteop.ecommerce.domain.account.service.AccountCommandService;
 import com.teopteop.ecommerce.domain.account.service.AccountQueryService;
-import com.teopteop.ecommerce.domain.auth.dto.LoginRequest;
-import com.teopteop.ecommerce.domain.auth.dto.LoginResponse;
-import com.teopteop.ecommerce.domain.auth.dto.SignUpCustomerRequest;
-import com.teopteop.ecommerce.domain.auth.dto.SignUpCustomerResponse;
+import com.teopteop.ecommerce.domain.auth.dto.*;
 import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.customer.entity.Customer;
 import com.teopteop.ecommerce.domain.customer.service.CustomerCommandService;
+import com.teopteop.ecommerce.domain.seller.entity.BankAccount;
+import com.teopteop.ecommerce.domain.seller.entity.Seller;
+import com.teopteop.ecommerce.domain.seller.service.SellerCommandService;
+import com.teopteop.ecommerce.domain.seller.vo.BusinessInfo;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import com.teopteop.ecommerce.global.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class AuthCommandService {
 
     private final AccountCommandService accountCommandService;
     private final CustomerCommandService customerCommandService;
+    private final SellerCommandService sellerCommandService;
 
     private final AccountQueryService accountQueryService;
 
@@ -37,18 +39,49 @@ public class AuthCommandService {
         accountQueryService.validateEmailNotDuplicate(request.email());
 
         // 2. 계정 생성 및 저장
-        Account account = Account.create(
+        Account savedAccount = accountCommandService.registerAccount(
                 request.email(),
                 passwordEncoder.encode(request.password()),
-                AccountRole.ROLE_CUSTOMER
-        );
-
-        Account savedAccount = accountCommandService.registerAccount(account);
+                AccountRole.ROLE_CUSTOMER);
 
         // 3. 고객 생성 및 저장
-        Customer customer = Customer.create(
+        Customer savedCustomer = customerCommandService.registerCustomer(
                 savedAccount.getId(),
                 request.name(),
+                request.phoneNumber(),
+                new Address(
+                        request.address().city(),
+                        request.address().street(),
+                        request.address().zipcode()
+                ));
+
+        return new SignUpCustomerResponse(
+                savedCustomer.getId(),
+                savedCustomer.getAccountId(),
+                savedAccount.getEmail()
+        );
+    }
+
+    public SignUpSellerResponse registerSellerAccount(SignUpSellerRequest request) {
+
+        // 1. Email 중복 검증
+        accountQueryService.validateEmailNotDuplicate(request.email());
+
+        // 2. 계정 생성 및 저장
+        Account savedAccount = accountCommandService.registerAccount(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                AccountRole.ROLE_SELLER
+        );
+
+        // 3. Seller 생성 및 저장
+        Seller savedSeller = sellerCommandService.registerSeller(
+                savedAccount.getId(),
+                new BusinessInfo(
+                        request.businessInfo().businessName(),
+                        request.businessInfo().businessNumber(),
+                        request.businessInfo().representativeName()
+                ),
                 request.phoneNumber(),
                 new Address(
                         request.address().city(),
@@ -57,11 +90,17 @@ public class AuthCommandService {
                 )
         );
 
-        Customer savedCustomer = customerCommandService.registerCustomer(customer);
+        // 4. BankAccount 생성 및 저장
+        sellerCommandService.registerBankAccount(
+                savedSeller.getId(),
+                request.bankAccount().bankCode(),
+                request.bankAccount().accountNumber(),
+                request.bankAccount().holderName()
+        );
 
-        return new SignUpCustomerResponse(
-                savedCustomer.getId(),
-                savedCustomer.getAccountId(),
+        return new SignUpSellerResponse(
+                savedSeller.getId(),
+                savedAccount.getId(),
                 savedAccount.getEmail()
         );
     }
