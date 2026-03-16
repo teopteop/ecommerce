@@ -6,7 +6,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 
-public record ProductAdminCreateRequest(
+public record ProductCreateRequest(
+
         @NotBlank(message = "상품명은 필수 입력 사항입니다.")
         String name,
 

@@ -38,9 +38,12 @@ public class Delivery extends BaseTimeEntity {
      * Order 애그리거트 루트를 통해서만 저장
      * linkDelivery() -> attachToOrder() 호출을 통해서만 세팅됨
      */
-    @OneToOne
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
+
+    @Column(name = "seller_id", nullable = false)
+    private Long sellerId;
 
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status;
@@ -53,10 +56,12 @@ public class Delivery extends BaseTimeEntity {
 
     // 배송 시점의 주소를 스냅샷으로 보존하기 위해 Address(Value Object) 값을 복사한다.
     private Delivery(
+            Long sellerId,
             String receiverName,
             String phoneNumber,
             Address address
     ) {
+        this.sellerId = sellerId;
         this.receiverName = receiverName;
         this.phoneNumber = phoneNumber;
         this.address = new Address(
@@ -68,11 +73,12 @@ public class Delivery extends BaseTimeEntity {
     }
 
     public static Delivery create(
+            Long sellerId,
             String receiverName,
             String phoneNumber,
             Address address
     ) {
-        return new Delivery(receiverName, phoneNumber, address);
+        return new Delivery(sellerId, receiverName, phoneNumber, address);
     }
 
     /**

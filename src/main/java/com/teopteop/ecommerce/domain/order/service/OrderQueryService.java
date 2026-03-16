@@ -29,7 +29,7 @@ public class OrderQueryService {
     }
 
     public OrderResponse findOrderDetail(Long orderId, Long accountId) {
-        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveryById(orderId)
+        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveriesById(orderId)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!foundOrder.getAccountId().equals(accountId)) {
