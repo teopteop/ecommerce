@@ -2,6 +2,7 @@ package com.teopteop.ecommerce.domain.order.entity;
 
 import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderException;
+import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import com.teopteop.ecommerce.global.common.vo.Address;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "deliveries")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Delivery {
+public class Delivery extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +27,11 @@ public class Delivery {
     private String phoneNumber;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "city", column = @Column(nullable = false, length = 50)),
+            @AttributeOverride(name = "street", column = @Column(nullable = false, length = 100)),
+            @AttributeOverride(name = "zipcode", column = @Column(nullable = false, length = 5))
+    })
     private Address address;
 
     /**

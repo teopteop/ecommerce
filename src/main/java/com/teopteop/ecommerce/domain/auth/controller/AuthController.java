@@ -1,9 +1,6 @@
 package com.teopteop.ecommerce.domain.auth.controller;
 
-import com.teopteop.ecommerce.domain.auth.dto.LoginRequest;
-import com.teopteop.ecommerce.domain.auth.dto.LoginResponse;
-import com.teopteop.ecommerce.domain.auth.dto.SignUpCustomerRequest;
-import com.teopteop.ecommerce.domain.auth.dto.SignUpCustomerResponse;
+import com.teopteop.ecommerce.domain.auth.dto.*;
 import com.teopteop.ecommerce.domain.auth.service.AuthCommandService;
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -24,15 +21,18 @@ public class AuthController {
 
     @PostMapping("/signup-customer")
     public ResponseEntity<ApiResponse<SignUpCustomerResponse>> signUpCustomer(@Valid @RequestBody SignUpCustomerRequest request) {
-        SignUpCustomerResponse response = authCommandService.registerCustomerAccount(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(authCommandService.registerCustomerAccount(request)));
+    }
+
+    @PostMapping("/signup-seller")
+    public ResponseEntity<ApiResponse<SignUpSellerResponse>> signUpSeller(@Valid @RequestBody SignUpSellerRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(authCommandService.registerSellerAccount(request)));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = authCommandService.authenticate(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(authCommandService.authenticate(request)));
     }
 }
