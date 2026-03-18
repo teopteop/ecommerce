@@ -1,6 +1,6 @@
-package com.teopteop.ecommerce.domain.order.entity;
+package com.teopteop.ecommerce.domain.delivery.entity;
 
-import com.teopteop.ecommerce.domain.order.exception.DeliveryErrorCode;
+import com.teopteop.ecommerce.domain.delivery.exception.DeliveryErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.global.common.entity.BaseTimeEntity;
 import com.teopteop.ecommerce.global.common.vo.Address;
@@ -17,13 +17,20 @@ import java.time.LocalDateTime;
 @Getter
 public class Delivery extends BaseTimeEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "receiver_name")
+    @Column(name = "order_item_id", nullable = false, unique = true)
+    private Long orderItemId;
+
+    @Column(name = "seller_id", nullable = false)
+    private Long sellerId;
+
+    @Column(name = "receiver_name", nullable = false)
     private String receiverName;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
     @Embedded
@@ -33,17 +40,6 @@ public class Delivery extends BaseTimeEntity {
             @AttributeOverride(name = "zipcode", column = @Column(nullable = false, length = 5))
     })
     private Address address;
-
-    /**
-     * Order 애그리거트 루트를 통해서만 저장
-     * linkDelivery() -> attachToOrder() 호출을 통해서만 세팅됨
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
-    @Column(name = "seller_id", nullable = false)
-    private Long sellerId;
 
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status;
@@ -56,11 +52,13 @@ public class Delivery extends BaseTimeEntity {
 
     // 배송 시점의 주소를 스냅샷으로 보존하기 위해 Address(Value Object) 값을 복사한다.
     private Delivery(
+            Long orderItemId,
             Long sellerId,
             String receiverName,
             String phoneNumber,
             Address address
     ) {
+        this.orderItemId = orderItemId;
         this.sellerId = sellerId;
         this.receiverName = receiverName;
         this.phoneNumber = phoneNumber;
@@ -73,26 +71,25 @@ public class Delivery extends BaseTimeEntity {
     }
 
     public static Delivery create(
+            Long orderItemId,
             Long sellerId,
             String receiverName,
             String phoneNumber,
             Address address
     ) {
-        return new Delivery(sellerId, receiverName, phoneNumber, address);
-    }
-
-    /**
-     * 연관관계 매핑 메서드
-     * package-private 캡슐화
-     */
-    void attachToOrder(Order order) {
-        this.order = order;
+        return new Delivery(
+                orderItemId,
+                sellerId,
+                receiverName,
+                phoneNumber,
+                address
+        );
     }
 
     // === 상태 전이 메서드 ===
     public void ship() {
         if (this.status != DeliveryStatus.PENDING) {
-           throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
+            throw new OrderException(DeliveryErrorCode.INVALID_STATUS_TRANSITION);
         }
 
         this.status = DeliveryStatus.SHIPPED;
