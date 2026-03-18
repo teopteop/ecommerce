@@ -2,7 +2,7 @@ package com.teopteop.ecommerce.domain.product.controller;
 
 import com.teopteop.ecommerce.domain.product.dto.ProductCreateRequest;
 import com.teopteop.ecommerce.domain.product.dto.ProductCreateResponse;
-import com.teopteop.ecommerce.domain.product.service.ProductCommandService;
+import com.teopteop.ecommerce.domain.product.service.ProductFacade;
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import com.teopteop.ecommerce.global.security.principal.AccountPrincipal;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ROLE_SELLER')")
 public class ProductSellerController {
 
-    private final ProductCommandService productCommandService;
+    private final ProductFacade productFacade;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ProductCreateResponse>> createProduct(
@@ -30,6 +30,6 @@ public class ProductSellerController {
             @Valid @RequestBody ProductCreateRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(productCommandService.registerProduct(principal.getId(), request)));
+                .body(ApiResponse.success(productFacade.registerProduct(principal.getId(), request)));
     }
 }

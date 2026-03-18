@@ -1,11 +1,9 @@
 package com.teopteop.ecommerce.domain.order.service;
 
-import com.teopteop.ecommerce.domain.order.dto.OrderResponse;
 import com.teopteop.ecommerce.domain.order.entity.Order;
 import com.teopteop.ecommerce.domain.order.exception.OrderErrorCode;
 import com.teopteop.ecommerce.domain.order.exception.OrderException;
 import com.teopteop.ecommerce.domain.order.repository.OrderJpaRepository;
-import com.teopteop.ecommerce.global.common.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,29 +17,28 @@ public class OrderQueryService {
 
     private final OrderJpaRepository orderJpaRepository;
 
-    /**
-     * 타 도메인(Payment 등)에서 상태 전이 목적으로 사용
-     * items, delivery 조회가 필요한 경우 fetch join 메서드를 사용할 것
-     */
     public Order findById(Long id) {
         return orderJpaRepository.findById(id)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
-    public OrderResponse findOrderDetail(Long orderId, Long accountId) {
-        Order foundOrder = orderJpaRepository.findWithItemsAndDeliveriesById(orderId)
+    public Order findWithItems(Long id) {
+        return orderJpaRepository.findWithItemsById(id)
+                .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
+    }
+
+    public Order findOrderDetail(Long orderId, Long accountId) {
+        Order foundOrder = orderJpaRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new OrderException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!foundOrder.getAccountId().equals(accountId)) {
             throw new OrderException(OrderErrorCode.ORDER_FORBIDDEN);
         }
 
-        return OrderResponse.ofDetail(foundOrder);
+        return foundOrder;
     }
 
-    public PageResponse<OrderResponse> findMyOrders(Long accountId, Pageable pageable) {
-        Page<Order> foundOrders = orderJpaRepository.findOrdersByAccountId(accountId, pageable);
-
-        return PageResponse.from(foundOrders.map(OrderResponse::ofSummary));
+    public Page<Order> findMyOrders(Long accountId, Pageable pageable) {
+        return orderJpaRepository.findOrdersByAccountId(accountId, pageable);
     }
 }

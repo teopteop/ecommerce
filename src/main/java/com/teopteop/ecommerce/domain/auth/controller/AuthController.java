@@ -1,7 +1,7 @@
 package com.teopteop.ecommerce.domain.auth.controller;
 
 import com.teopteop.ecommerce.domain.auth.dto.*;
-import com.teopteop.ecommerce.domain.auth.service.AuthCommandService;
+import com.teopteop.ecommerce.domain.auth.service.AuthFacade;
 import com.teopteop.ecommerce.global.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,22 +17,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthCommandService authCommandService;
+    private final AuthFacade authFacade;
 
     @PostMapping("/signup-customer")
     public ResponseEntity<ApiResponse<SignUpCustomerResponse>> signUpCustomer(@Valid @RequestBody SignUpCustomerRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(authCommandService.registerCustomerAccount(request)));
+                .body(ApiResponse.success(authFacade.registerCustomerAccount(request)));
     }
 
     @PostMapping("/signup-seller")
     public ResponseEntity<ApiResponse<SignUpSellerResponse>> signUpSeller(@Valid @RequestBody SignUpSellerRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(authCommandService.registerSellerAccount(request)));
+                .body(ApiResponse.success(authFacade.registerSellerAccount(request)));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(authCommandService.authenticate(request)));
+        return ResponseEntity.ok(ApiResponse.success(authFacade.authenticate(request)));
     }
 }

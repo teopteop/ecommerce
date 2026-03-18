@@ -1,7 +1,7 @@
-package com.teopteop.ecommerce.domain.order.dto;
+package com.teopteop.ecommerce.domain.delivery.dto;
 
-import com.teopteop.ecommerce.domain.order.entity.Delivery;
-import com.teopteop.ecommerce.domain.order.entity.DeliveryStatus;
+import com.teopteop.ecommerce.domain.delivery.entity.Delivery;
+import com.teopteop.ecommerce.domain.delivery.entity.DeliveryStatus;
 import com.teopteop.ecommerce.global.common.vo.Address;
 
 public record DeliveryResponse(

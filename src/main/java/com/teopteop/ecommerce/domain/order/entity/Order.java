@@ -38,9 +38,6 @@ public class Order extends BaseTimeEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
     private List<OrderItem> items = new ArrayList<>();
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
-    private List<Delivery> deliveries = new ArrayList<>();
-
     private Order(Long accountId, String orderNumber) {
         this.accountId = accountId;
         this.orderNumber = orderNumber;
@@ -62,15 +59,9 @@ public class Order extends BaseTimeEntity {
         this.totalPrice = totalPrice.add(item.getOrderPrice());
     }
 
-    // 연관관계 편의 메서드
-    public void addDelivery(Delivery delivery) {
-        this.deliveries.add(delivery);
-        delivery.attachToOrder(this);
-    }
-
     // === 상태전이 메서드 ===
     public void cancel() {
-        if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
+        if (this.status == OrderStatus.CANCELED) {
             throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -78,7 +69,7 @@ public class Order extends BaseTimeEntity {
     }
 
     public void partialCancel()  {
-        if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.SHIPPED) {
+        if (this.status == OrderStatus.CANCELED) {
             throw new OrderException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 

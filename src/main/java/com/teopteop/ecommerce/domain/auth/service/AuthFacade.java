@@ -9,7 +9,6 @@ import com.teopteop.ecommerce.domain.auth.exception.AuthErrorCode;
 import com.teopteop.ecommerce.domain.auth.exception.AuthException;
 import com.teopteop.ecommerce.domain.customer.entity.Customer;
 import com.teopteop.ecommerce.domain.customer.service.CustomerCommandService;
-import com.teopteop.ecommerce.domain.seller.entity.BankAccount;
 import com.teopteop.ecommerce.domain.seller.entity.Seller;
 import com.teopteop.ecommerce.domain.seller.service.SellerCommandService;
 import com.teopteop.ecommerce.domain.seller.vo.BusinessInfo;
@@ -23,13 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AuthCommandService {
+public class AuthFacade {
 
     private final AccountCommandService accountCommandService;
+    private final AccountQueryService accountQueryService;
+
     private final CustomerCommandService customerCommandService;
     private final SellerCommandService sellerCommandService;
-
-    private final AccountQueryService accountQueryService;
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
