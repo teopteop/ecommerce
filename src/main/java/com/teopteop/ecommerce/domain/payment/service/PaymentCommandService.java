@@ -95,21 +95,20 @@ public class PaymentCommandService {
         );
     }
 
-    public void cancelPayment(String orderNumber, OrderCancelReason cancelReason, BigDecimal cancelAmount) {
-        // 1. orderNumber로 Payment 조회 (비관락)
+    public void cancelFullPayment(String orderNumber, OrderCancelReason cancelReason) {
         Payment foundPayment = paymentJpaRepository.findByOrderNumberForUpdate(orderNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
-        // 2. 전액, 부분 취소 분기: 토스 API 호출 -> DB 상태 전이
-        if (cancelAmount == null) {
-            // 전액 취소
-            tossPaymentClient.cancelFully(foundPayment.getPaymentKey(), cancelReason.getDescription());
-            foundPayment.cancelFully();
-        } else {
-            // 부분 취소
-            tossPaymentClient.cancelPartially(foundPayment.getPaymentKey(), cancelReason.getDescription(), cancelAmount);
-            foundPayment.cancelPartially(cancelAmount);
-        }
+        tossPaymentClient.cancelFully(foundPayment.getPaymentKey(), cancelReason.getDescription());
+        foundPayment.cancelFully();
+    }
+
+    public void cancelPartialPayment(String orderNumber, OrderCancelReason cancelReason, BigDecimal cancelAmount) {
+        Payment foundPayment = paymentJpaRepository.findByOrderNumberForUpdate(orderNumber)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+        tossPaymentClient.cancelPartially(foundPayment.getPaymentKey(), cancelReason.getDescription(), cancelAmount);
+        foundPayment.cancelPartially(cancelAmount);
     }
 
     public void handleStatusChanged(TossPaymentStatusChangedRequest request) {

@@ -18,10 +18,6 @@ public class OrderTest {
         OrderItem item = OrderItem.create(1L, 1L, "상품명", BigDecimal.valueOf(10000), 2);
         order.addOrderItem(item);
 
-        Address address = new Address("서울", "강남대로 1", "12345");
-        Delivery delivery = Delivery.create(1L, "홍길동", "010-1234-5678", address);
-        order.addDelivery(delivery);
-
         return order;
     }
 
